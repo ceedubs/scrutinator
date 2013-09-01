@@ -15,12 +15,14 @@ object Main {
       override def toString = "Mock request " + super.toString
     }
 
-    val fields = (queryParam[Int]("age"), queryParam[String]("name"))
+    val fields = (queryParam[Int]("age"), queryParam[String]("name").required)
 
     val output = for {
-      (age, name) <- bindAllFromRequest(fields)
+      validParams <- bindAllFromRequest(fields)
+      (age, name) = validParams
     } yield {
-      s"$name is $age years old"
+      val ageDesc = age.map(_ + " years old").getOrElse("an unkown age")
+      s"$name is $ageDesc"
     }
 
     println(output)
