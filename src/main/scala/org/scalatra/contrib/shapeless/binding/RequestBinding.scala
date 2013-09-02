@@ -37,7 +37,7 @@ object QueryParamReader {
   }
 
   implicit def optionQueryParamReader[T](implicit reader: QueryParamReader[T]): QueryParamReader[Option[T]] = new QueryParamReader[Option[T]] {
-    def read(key: String, request: Request): Option[ErrorsOr[Option[T]]] = reader.read(key, request).map(_.map(_.some))
+    def read(key: String, request: Request): Option[ErrorsOr[Option[T]]] = reader.read(key, request).sequence.some
   }
 }
 

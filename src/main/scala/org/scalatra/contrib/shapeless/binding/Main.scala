@@ -9,6 +9,7 @@ object Main {
     implicit val request: Request = new Request {
       val queryParams = Map(
         "age" -> 25.toString,
+//        "age" -> "26s",
         "name" -> "Cody"
       )
 
@@ -19,8 +20,8 @@ object Main {
 
     val output = for {
       validParams <- bindAllFromRequest(fields)
-      (age, name) = validParams
     } yield {
+      val (age, name) = validParams
       val ageDesc = age.map(_ + " years old").getOrElse("an unkown age")
       s"$name is $ageDesc"
     }
