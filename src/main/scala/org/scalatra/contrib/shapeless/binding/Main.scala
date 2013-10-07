@@ -27,6 +27,7 @@ object Main {
       s"$name is $ageDesc and has visited $visitCount times"
     }
 
+    // output1 is a Validation[(Option[Int], String, Int)]
     println(output1)
 
     // OR
@@ -39,6 +40,7 @@ object Main {
       s"$name is $ageDesc and has visited $visitCount times"
     }
 
+    // output2 is a Validation[(Option[Int], String, Int)]
     println(output2)
   }
 }
