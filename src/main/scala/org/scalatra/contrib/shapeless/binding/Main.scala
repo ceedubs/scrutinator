@@ -22,7 +22,16 @@ object Main {
       paramWithDefault[Int, QueryString]("visits", 0)
     )
 
-    val output = for {
+    val output1 = bindAllFromRequest(fields) map Function.tupled { (age, name, visitCount) =>
+      val ageDesc = age.map(_ + " years old").getOrElse("an unkown age")
+      s"$name is $ageDesc and has visited $visitCount times"
+    }
+
+    println(output1)
+
+    // OR
+
+    val output2 = for {
       validParams <- bindAllFromRequest(fields)
     } yield {
       val (age, name, visitCount) = validParams
@@ -30,6 +39,6 @@ object Main {
       s"$name is $ageDesc and has visited $visitCount times"
     }
 
-    println(output)
+    println(output2)
   }
 }
