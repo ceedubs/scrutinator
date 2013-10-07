@@ -10,7 +10,6 @@ import scalaz.Applicative
 import shapeless.contrib.scalaz._
 import org.scalatra.validation.ValidationError
 import scalaz.syntax.std.list._
-import org.scalatra.contrib.shapeless.binding.RequestParamReader.QueryParamReader
 
 // a simplified mock HTTP request :)
 trait Request {
@@ -23,10 +22,10 @@ trait RequestParamReader[A] {
 }
 
 object RequestParamReader {
-  type QueryParamReader[A] = RequestParamReader[A] { type Source = ValueSource.QueryString }
-}
+  type Aux[A, S] = RequestParamReader[A] { type Source = S }
 
-object QueryParamReader {
+  type QueryParamReader[A] = RequestParamReader[A] { type Source = ValueSource.QueryString }
+
   implicit val stringQueryParamReader: QueryParamReader[String] = new RequestParamReader[String] {
     type Source = ValueSource.QueryString
     def read(key: String, request: Request) = request.queryParams.get(key).filterNot(_.isEmpty).map(_.success)
@@ -40,87 +39,49 @@ object QueryParamReader {
   }
 }
 
-trait RequestKey {
-  type Source <: ValueSource
-
+sealed trait ValueSource {
   def name: String
-
-  def source: Source
 }
 
-sealed trait ValueSource
 object ValueSource {
   trait Header extends ValueSource
-  case object Header extends Header
+  implicit val Header: Header = new Header {
+    val name = "Header"
+  }
 
   trait QueryString extends ValueSource
-  case object QueryString extends QueryString
+  implicit val QueryString: QueryString = new QueryString {
+    val name = "QueryString"
+  }
 
   trait Body extends ValueSource
-  case object Body extends Body
-}
-
-trait RequestField {
-  type Value
-  def key: RequestKey
-  def required: Boolean
-  def description: Option[String]
-  def validations: List[Value => Option[ValidationError]]
-}
-
-object RequestField {
-  type Aux[V] = RequestField { type Value = V}
-}
-
-trait RequestBinding { self =>
-  type Value
-  type Output
-
-  def field: RequestField.Aux[Value]
-  def reader: RequestParamReader[Value]
-  def validator: BoundValueValidator.Aux[Value, Output]
-}
-
-object RequestBinding {
-  type Aux[V, O] = RequestBinding {
-    type Value = V
-    type Output = O
+  implicit val Body: Body = new Body {
+    val name = "Body"
   }
 }
 
-trait RequestBindingWithRequest { self =>
-  type Value
-  type Output
+case class RequestField[Value, Source](
+    name: String,
+    source: Source,
+    required: Boolean,
+    description: Option[String],
+    validations: List[Value => Option[ValidationError]])
 
-  def binding: RequestBinding.Aux[Value, Output]
+case class RequestBinding[Value, Output, Source](
+    field: RequestField[Value, Source],
+    reader: RequestParamReader[Value],
+    validator: BoundValueValidator[Value, Output])
 
-  def request: Request
-}
+case class RequestBindingWithRequest[Value, Output, Source](
+    binding: RequestBinding[Value, Output, Source],
+    request: Request)
 
-object RequestBindingWithRequest { self =>
-  type Aux[V, O] = RequestBindingWithRequest {
-    type Value = V
-    type Output = O
-  }
-}
-
-trait BoundValueValidator {
-  type Value
-  type Output
-
+trait BoundValueValidator[Value, Output] {
   def runValidations(boundValue: Option[ErrorsOr[Value]], validations: List[Value => Option[ValidationError]]): ErrorsOr[Output]
 }
 
-object BoundValueValidator {
-  type Aux[V, O] = BoundValueValidator {
-    type Value = V
-    type Output = O
-  }
-}
-
 // TODO DRY
-trait RequiredValueBoundValueValidator extends BoundValueValidator {
-  type Output = Value
+trait RequiredValueBoundValueValidator[Value] extends BoundValueValidator[Value, Value] {
   def requiredError: ValidationError
 
   def runValidations(boundValue: Option[ErrorsOr[Value]], validations: List[Value => Option[ValidationError]]): ErrorsOr[Value] = {
@@ -135,9 +96,7 @@ trait RequiredValueBoundValueValidator extends BoundValueValidator {
   }
 }
 
-trait DefaultValueBoundValueValidator extends BoundValueValidator {
-  type Output = Value
-  def defaultValue: Value
+case class DefaultValueBoundValueValidator[Value](defaultValue: Value) extends BoundValueValidator[Value, Value] {
 
   def runValidations(boundValue: Option[ErrorsOr[Value]], validations: List[Value => Option[ValidationError]]): ErrorsOr[Value] = {
     boundValue.getOrElse(defaultValue.successNel) flatMap { value =>
@@ -146,8 +105,7 @@ trait DefaultValueBoundValueValidator extends BoundValueValidator {
   }
 }
 
-trait OptionalValueBoundValueValidator extends BoundValueValidator {
-  type Output = Option[Value]
+class OptionalValueBoundValueValidator[Value] extends BoundValueValidator[Value, Option[Value]] {
 
   def runValidations(boundValue: Option[ErrorsOr[Value]], validations: List[Value => Option[ValidationError]]): ErrorsOr[Option[Value]] = {
     boundValue.cata(
@@ -162,22 +120,17 @@ trait OptionalValueBoundValueValidator extends BoundValueValidator {
 }
 
 object bindFromReq extends Poly1 {
-  implicit def default[V, O] = at[RequestBindingWithRequest.Aux[V, O]]{ bindingWithReq =>
-    val boundValue = bindingWithReq.binding.reader.read(bindingWithReq.binding.field.key.name, bindingWithReq.request)
+  implicit def default[V, O, S] = at[RequestBindingWithRequest[V, O, S]]{ bindingWithReq =>
+    val boundValue = bindingWithReq.binding.reader.read(bindingWithReq.binding.field.name, bindingWithReq.request)
     bindingWithReq.binding.validator.runValidations(boundValue, bindingWithReq.binding.field.validations): ErrorsOr[O]
   }
 }
 
 object tupleToBindingWithRequest extends Poly1 {
-  implicit def default[V, O] = at[(RequestBinding.Aux[V, O], Request)]{ t =>
-    val bindingWithRequest: RequestBindingWithRequest.Aux[V, O] = new  RequestBindingWithRequest {
-      type Value = V
-      type Output = O
-
-      val request: Request = t._2
-
-      val binding: RequestBinding.Aux[Value, Output] = t._1
-    }
+  implicit def default[V, O, S] = at[(RequestBinding[V, O, S], Request)]{ t =>
+    val bindingWithRequest: RequestBindingWithRequest[V, O, S] = RequestBindingWithRequest[V, O, S](
+      binding = t._1,
+      request = t._2)
     bindingWithRequest
   }
 }
@@ -220,4 +173,41 @@ object RequestBindingSupport {
     val traversed = bindingTraverser(request, gen.to(fields))
     applicative.map(traversed)(tupler(_))
   }
+
+  def requiredParam[A, S <: ValueSource](fieldName: String)(implicit source: S, reader: RequestParamReader.Aux[A, S]): RequestBinding[A, A, S] = {
+    RequestBinding[A, A, S](
+      field = RequestField(
+        name = fieldName,
+        source = source,
+        required = true,
+        description = None,
+        validations = Nil),
+      reader = reader,
+      validator = new RequiredValueBoundValueValidator[A] { val requiredError = ValidationError(s"$fieldName is required") }) // TODO improve error message handling
+  }
+
+  def optionalParam[A, S <: ValueSource](fieldName: String)(implicit source: S, reader: RequestParamReader.Aux[A, S]): RequestBinding[A, Option[A], S] = {
+    RequestBinding[A, Option[A], S](
+      field = RequestField(
+        name = fieldName,
+        source = source,
+        required = false,
+        description = None,
+        validations = Nil),
+      reader = reader,
+      validator = new OptionalValueBoundValueValidator[A])
+  }
+
+  def paramWithDefault[A, S <: ValueSource](fieldName: String, defaultValue: A)(implicit source: S, reader: RequestParamReader.Aux[A, S]): RequestBinding[A, A, S] = {
+    RequestBinding[A, A, S](
+      field = RequestField(
+        name = fieldName,
+        source = source,
+        required = false,
+        description = None,
+        validations = Nil),
+      reader = reader,
+      validator = new DefaultValueBoundValueValidator[A](defaultValue)) // TODO improve error message handling
+  }
+
 }
