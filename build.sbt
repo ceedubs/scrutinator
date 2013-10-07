@@ -66,9 +66,9 @@ mainClass in (Compile, run) := Some("org.scalatra.contrib.shapeless.binding.Main
 
 /* dependencies */
 libraryDependencies ++= Seq (
-  "org.scalaz" %% "scalaz-core" % "7.0.2",
-  "org.typelevel" %% "shapeless-scalaz" % "0.2-SNAPSHOT",
-  "com.chuusai" % "shapeless" % "2.0.0-SNAPSHOT" cross CrossVersion.full,
+  "org.scalaz" %% "scalaz-core" % "7.0.3",
+  "org.typelevel" %% "shapeless-scalaz" % "0.1.2",
+  "com.chuusai" % "shapeless" % "2.0.0-M1" cross CrossVersion.full,
   "org.scalatra" %% "scalatra" % "2.2.1",
   "org.scalatra" %% "scalatra-commands" % "2.2.1"
 )

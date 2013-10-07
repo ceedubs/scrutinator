@@ -7,7 +7,7 @@ import scalaz.syntax.id._
 import scalaz.syntax.std.string._
 import scalaz.syntax.traverse._
 import scalaz.Applicative
-import shapeless.contrib.scalaz.TraverseFunctions._
+import shapeless.contrib.scalaz._
 import org.scalatra.validation.ValidationError
 import scalaz.syntax.std.list._
 import org.scalatra.contrib.shapeless.binding.RequestParamReader.QueryParamReader
