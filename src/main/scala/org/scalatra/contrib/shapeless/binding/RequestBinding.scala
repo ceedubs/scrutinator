@@ -1,6 +1,7 @@
 package org.scalatra.contrib.shapeless.binding
 
 import shapeless._
+import shapeless.ops.hlist.{ Mapper, Tupler, ZipConst }
 import scalaz.syntax.validation._
 import scalaz.syntax.std.option._
 import scalaz.syntax.id._
@@ -10,11 +11,6 @@ import scalaz.Applicative
 import shapeless.contrib.scalaz._
 import org.scalatra.validation.ValidationError
 import scalaz.syntax.std.list._
-
-// a simplified mock HTTP request :)
-trait Request {
-  def queryParams: Map[String, String]
-}
 
 trait RequestParamReader[A] {
   type Source <: ValueSource
@@ -28,13 +24,13 @@ object RequestParamReader {
 
   implicit val stringQueryParamReader: QueryParamReader[String] = new RequestParamReader[String] {
     type Source = ValueSource.QueryString
-    def read(key: String, request: Request) = request.queryParams.get(key).filterNot(_.isEmpty).map(_.success)
+    def read(key: String, request: Request) = request.parameters.get(key).filterNot(_.isEmpty).map(_.success)
   }
 
   implicit val intQueryParamReader: QueryParamReader[Int] = new RequestParamReader[Int] {
     type Source = ValueSource.QueryString
     def read(key: String, request: Request) = {
-      request.queryParams.get(key).map(x => x.parseInt.leftMap(_ => ValidationError(s"$x is not a valid integer").wrapNel))
+      request.parameters.get(key).map(x => x.parseInt.leftMap(_ => ValidationError(s"$x is not a valid integer").wrapNel))
     }
   }
 }
@@ -142,7 +138,7 @@ sealed trait RequestFieldBinder[L <: HList] {
 
 object RequestFieldBinder {
   type Aux[L <: HList, O <: HList] = RequestFieldBinder[L] { type Out = O }
-  implicit def fromZipConstAndMapper[L <: HList, O1 <: HList, O <: HList](implicit zipConster: ZipConstAux[Request, L, O1], bindingMapper: MapperAux[tupleToBindingWithRequest.type, O1, O]): Aux[L, O] = new RequestFieldBinder[L] {
+  implicit def fromZipConstAndMapper[L <: HList, O1 <: HList, O <: HList](implicit zipConster: ZipConst.Aux[Request, L, O1], bindingMapper: Mapper.Aux[tupleToBindingWithRequest.type, O1, O]): Aux[L, O] = new RequestFieldBinder[L] {
     type Out = O
     def apply(request: Request, fields: L) = {
       val tuples = zipConster(request, fields)

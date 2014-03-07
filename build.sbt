@@ -59,18 +59,14 @@ scalacOptions <++= scalaVersion map { sv =>
 
 javacOptions ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
 
-/* entry point */
-mainClass in (Compile, packageBin) := Some("org.scalatra.contrib.shapeless.binding.Main")
-
-mainClass in (Compile, run) := Some("org.scalatra.contrib.shapeless.binding.Main")
-
 /* dependencies */
 libraryDependencies ++= Seq (
   "org.scalaz" %% "scalaz-core" % "7.0.3",
-  "org.typelevel" %% "shapeless-scalaz" % "0.1.2",
-  "com.chuusai" % "shapeless" % "2.0.0-M1" cross CrossVersion.full,
-  "org.scalatra" %% "scalatra" % "2.2.1",
-  "org.scalatra" %% "scalatra-commands" % "2.2.1"
+  "org.typelevel" %% "shapeless-scalaz" % "0.2-SNAPSHOT" changing(),
+  "com.chuusai" % "shapeless_2.10.2" % "2.0.0-SNAPSHOT",
+  "org.scalatra" %% "scalatra" % "2.3.0.M1",
+  "org.scalatra" %% "scalatra-commands" % "2.3.0.M1",
+  "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" artifacts (Artifact("javax.servlet", "jar", "jar"))
 )
 
 /* you may need these repos */
@@ -120,10 +116,3 @@ pomExtra := (
     </developer>
   </developers>
 )
-
-/* assembly plugin */
-mainClass in AssemblyKeys.assembly := Some("org.scalatra.contrib.shapeless.binding.Main")
-
-assemblySettings
-
-test in AssemblyKeys.assembly := {}
