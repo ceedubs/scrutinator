@@ -1,29 +1,27 @@
 /* basic project info */
-name := "scalatra-shapeless-bindings"
+name := "scrutinator"
 
-organization := "ceedubs"
+organization := "net.ceedubs"
 
 version := "0.1.0-SNAPSHOT"
 
 description := "Request binding in Scalatra with help from Shapeless"
 
-homepage := Some(url("https://github.com/ceedubs/scalatra-shapeless-bindings"))
+homepage := Some(url("https://github.com/ceedubs/scrutinator"))
 
 startYear := Some(2013)
 
 licenses := Seq(
-  ("GPLv3", url("http://www.gnu.org/licenses/gpl-3.0.txt"))
+  "MIT License" -> url("http://www.opensource.org/licenses/mit-license.html")
 )
 
 scmInfo := Some(
   ScmInfo(
-    url("https://github.com/ceedubs/scalatra-shapeless-bindings"),
-    "scm:git:https://github.com/ceedubs/scalatra-shapeless-bindings.git",
-    Some("scm:git:git@github.com:ceedubs/scalatra-shapeless-bindings.git")
+    url("https://github.com/ceedubs/scrutinator"),
+    "scm:git:https://github.com/ceedubs/scrutinator.git",
+    Some("scm:git:git@github.com:ceedubs/scrutinator.git")
   )
 )
-
-// organizationName := "My Company"
 
 /* scala versions and options */
 scalaVersion := "2.10.2"
@@ -59,18 +57,16 @@ scalacOptions <++= scalaVersion map { sv =>
 
 javacOptions ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
 
-/* entry point */
-mainClass in (Compile, packageBin) := Some("org.scalatra.contrib.shapeless.binding.Main")
-
-mainClass in (Compile, run) := Some("org.scalatra.contrib.shapeless.binding.Main")
-
 /* dependencies */
 libraryDependencies ++= Seq (
   "org.scalaz" %% "scalaz-core" % "7.0.3",
-  "org.typelevel" %% "shapeless-scalaz" % "0.1.2",
-  "com.chuusai" % "shapeless" % "2.0.0-M1" cross CrossVersion.full,
-  "org.scalatra" %% "scalatra" % "2.2.1",
-  "org.scalatra" %% "scalatra-commands" % "2.2.1"
+  "org.typelevel" %% "shapeless-scalaz" % "0.2-SNAPSHOT" changing(),
+  "com.chuusai" % "shapeless_2.10.2" % "2.0.0-SNAPSHOT",
+  "org.scalatra" %% "scalatra" % "2.3.0.M1",
+  "org.scalatra" %% "scalatra-commands" % "2.3.0.M1",
+  "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" artifacts (Artifact("javax.servlet", "jar", "jar")),
+  "org.specs2"     %% "specs2"         % "2.3.1"    % "test",
+  "org.scalacheck" %% "scalacheck"     % "1.10.1"   % "test"
 )
 
 /* you may need these repos */
@@ -80,7 +76,7 @@ resolvers ++= Seq(
 )
 
 /* testing */
-parallelExecution in Test := false
+parallelExecution in Test := true
 
 /* sbt behavior */
 logLevel in compile := Level.Warn
@@ -120,10 +116,3 @@ pomExtra := (
     </developer>
   </developers>
 )
-
-/* assembly plugin */
-mainClass in AssemblyKeys.assembly := Some("org.scalatra.contrib.shapeless.binding.Main")
-
-assemblySettings
-
-test in AssemblyKeys.assembly := {}
