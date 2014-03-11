@@ -5,6 +5,7 @@ import org.specs2.mock.Mockito
 import org.specs2.ScalaCheck
 import shapeless._
 import shapeless.syntax.singleton._
+import shapeless.test.illTyped
 import scalaz.\/-
 import javax.servlet.http.HttpServletRequest
 import scala.collection.JavaConverters._
@@ -28,6 +29,23 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
         case \/-(params) =>
           params.get("first") must be_===(first.flatMap(blankOption))
           params.get("second") must be_===(second.flatMap(blankOption))
+      }
+    }
+
+    "fail to compile if an invalid param is accessed" in {
+      val mockRequest = mock[HttpServletRequest]
+      mockRequest.getParameterMap returns Map.empty[String, Array[String]].asJava
+      val fields =
+        ("first" ->> OptionalQueryParam[String]()) ::
+        ("second" ->> OptionalQueryParam[String]()) ::
+        HNil
+
+      RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
+        case \/-(params) =>
+          params.get("first") // compiles
+          params.get("second") // compiles
+          illTyped("""params.get("not-a-param")""") // wouldn't compile
+          ok // as long as this test compiles, it should pass
       }
     }
   }
