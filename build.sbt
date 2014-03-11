@@ -12,7 +12,7 @@ homepage := Some(url("https://github.com/ceedubs/scalatra-shapeless-bindings"))
 startYear := Some(2013)
 
 licenses := Seq(
-  ("GPLv3", url("http://www.gnu.org/licenses/gpl-3.0.txt"))
+  "MIT License" -> url("http://www.opensource.org/licenses/mit-license.html")
 )
 
 scmInfo := Some(
