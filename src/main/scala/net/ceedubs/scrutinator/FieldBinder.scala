@@ -1,5 +1,6 @@
 package net.ceedubs.scrutinator
 
+import net.ceedubs.scrutinator.readers.ParamReader
 import shapeless._
 import shapeless.record._
 import shapeless.ops.record.Keys

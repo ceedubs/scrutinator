@@ -14,6 +14,7 @@ import org.scalatra.validation.{ FieldName, ValidationError }
 
 class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
   import RequestBindingSpec._
+  import Param._
 
   "Request binding" should {
     "successfully bind valid params" ! prop { (first: Option[String], second: Option[String]) =>
@@ -23,8 +24,8 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
         "second" -> second.map(s => Array(s)).getOrElse(Array())
       ).asJava
       val fields =
-        ("first" ->> QueryParam[String]()) ::
-        ("second" ->> QueryParam[String]()) ::
+        ("first" ->> queryParam[String]()) ::
+        ("second" ->> queryParam[String]()) ::
         HNil
 
       RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
@@ -38,8 +39,8 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
       val mockRequest = mock[HttpServletRequest]
       mockRequest.getParameterMap returns Map.empty[String, Array[String]].asJava
       val fields =
-        ("first" ->> QueryParam[String]()) ::
-        ("second" ->> QueryParam[String]()) ::
+        ("first" ->> queryParam[String]()) ::
+        ("second" ->> queryParam[String]()) ::
         HNil
 
       RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
@@ -57,7 +58,7 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
         "first" -> first.map(s => Array(s)).getOrElse(Array())
       ).asJava
       val fields =
-        ("first" ->> RequiredParam(QueryParam[String](), (p: NamedParam[_]) => s"Hey! '${p.name}' is a required field!")) ::
+        ("first" ->> RequiredParam(queryParam[String](), (p: NamedParam[_]) => s"Hey! '${p.name}' is a required field!")) ::
         HNil
 
       val expected = first.filterNot(_.isEmpty).map(_ :: HNil).toRightDisjunction(NonEmptyList(ValidationError("Hey! 'first' is a required field!", FieldName("first"))))
