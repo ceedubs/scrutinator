@@ -4,7 +4,7 @@ import shapeless._
 import org.scalatra.validation.ValidationError
 import scalaz._
 
-final case class OptionalQueryParam[A](
+final case class QueryParam[A](
     description: Option[String] = None/*,
     validation: Kleisli[List, A, ValidationError] = Kleisli[List, A, ValidationError](_ => Nil)*/)
 

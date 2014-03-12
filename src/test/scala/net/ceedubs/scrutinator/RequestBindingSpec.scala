@@ -6,9 +6,11 @@ import org.specs2.ScalaCheck
 import shapeless._
 import shapeless.syntax.singleton._
 import shapeless.test.illTyped
-import scalaz.\/-
+import scalaz._
+import scalaz.syntax.std.option._
 import javax.servlet.http.HttpServletRequest
 import scala.collection.JavaConverters._
+import org.scalatra.validation.{ FieldName, ValidationError }
 
 class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
   import RequestBindingSpec._
@@ -21,8 +23,8 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
         "second" -> second.map(s => Array(s)).getOrElse(Array())
       ).asJava
       val fields =
-        ("first" ->> OptionalQueryParam[String]()) ::
-        ("second" ->> OptionalQueryParam[String]()) ::
+        ("first" ->> QueryParam[String]()) ::
+        ("second" ->> QueryParam[String]()) ::
         HNil
 
       RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
@@ -36,8 +38,8 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
       val mockRequest = mock[HttpServletRequest]
       mockRequest.getParameterMap returns Map.empty[String, Array[String]].asJava
       val fields =
-        ("first" ->> OptionalQueryParam[String]()) ::
-        ("second" ->> OptionalQueryParam[String]()) ::
+        ("first" ->> QueryParam[String]()) ::
+        ("second" ->> QueryParam[String]()) ::
         HNil
 
       RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
@@ -47,6 +49,19 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
           illTyped("""params.get("not-a-param")""") // wouldn't compile
           ok // as long as this test compiles, it should pass
       }
+    }
+
+    "bind required params" ! prop { (first: Option[String]) =>
+      val mockRequest = mock[HttpServletRequest]
+      mockRequest.getParameterMap returns Map(
+        "first" -> first.map(s => Array(s)).getOrElse(Array())
+      ).asJava
+      val fields =
+        ("first" ->> RequiredParam(QueryParam[String](), (p: NamedParam[_]) => s"Hey! '${p.name}' is a required field!")) ::
+        HNil
+
+      val expected = first.filterNot(_.isEmpty).map(_ :: HNil).toRightDisjunction(NonEmptyList(ValidationError("Hey! 'first' is a required field!", FieldName("first"))))
+      RequestBinding.bindFromRequest(fields, mockRequest) must be_===(expected)
     }
   }
 }

@@ -22,7 +22,7 @@ object FieldBinder {
   }
 
   object bindParam extends Poly1 {
-    implicit def atField[K, A, O](implicit npc: NamedParamConverter[K], reader: NamedParamReader[A, Request, O]) = at[FieldType[K, A]] { param =>
+    implicit def atField[K, A](implicit npc: NamedParamConverter[K], reader: ParamReader[NamedParam[A], Request]) = at[FieldType[K, A]] { param =>
       reader.forParam(npc.asNamedParam(param))
     }
   }
