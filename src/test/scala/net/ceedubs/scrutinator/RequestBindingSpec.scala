@@ -15,6 +15,7 @@ import org.scalatra.validation.{ FieldName, ValidationError }
 class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
   import RequestBindingSpec._
   import Param._
+  import ValueSource._
 
   "Request binding" should {
     "successfully bind valid params" ! prop { (first: Option[String], second: Option[String]) =>
@@ -25,7 +26,7 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
       ).asJava
       val fields =
         ("first" ->> queryParam[String]()) ::
-        ("second" ->> queryParam[String]()) ::
+        ("second" ->> Param[String, QueryString]()) ::
         HNil
 
       RequestBinding.bindFromRequest(fields, mockRequest) must beLike {

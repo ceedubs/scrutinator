@@ -9,7 +9,7 @@ import shapeless.contrib.scalaz._
 import scalaz._
 import scalaz.Leibniz._
 
-// I is the input type for the Kleisli (usually Request)
+/** I is the input type for the Kleisli (usually Request) */
 trait FieldBinder[L <: HList, I] {
   type R <: HList
 
@@ -23,8 +23,9 @@ object FieldBinder {
   }
 
   object bindParam extends Poly1 {
-    implicit def atField[K, A](implicit npc: NamedParamConverter[K], reader: ParamReader[NamedParam[A], Request]) = at[FieldType[K, A]] { param =>
-      reader.forParam(npc.asNamedParam(param))
+    implicit def atField[K, A, O](implicit npc: NamedParamConverter[K], reader: ParamReader[ErrorsOr, (NamedParam[A], Request), O]) = at[FieldType[K, A]] { param =>
+      val namedParam: NamedParam[A] = npc.asNamedParam(param)
+      reader.reader.local((request: Request) => (namedParam, request))
     }
   }
 

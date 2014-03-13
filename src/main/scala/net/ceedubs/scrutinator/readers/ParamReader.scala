@@ -5,39 +5,24 @@ import scalaz.{ @@ => _, _}
 import scalaz.std.option.toSuccess
 import org.scalatra.validation.{ FieldName, ValidationError }
 
-trait ParamReader[P, I] {
-  type O
+trait ParamReader[M[+_], -I, +O] {
+ 
+  def reader: Kleisli[M, I, O]
 
-  def read(input: I, param: P): ErrorsOr[O]
+  def transform[M2[+_], I2, O2](f: Kleisli[M, I, O] => Kleisli[M2, I2, O2]): ParamReader[M2, I2, O2] = ParamReader.fromKleisli(f(reader))
 
-  def forParam(param: P): Kleisli[ErrorsOr, I, O] = Kleisli[ErrorsOr, I, O](input => read(input, param))
-  
 }
 
-object ParamReader extends StringReaders with RequiredParamReaders {
-  type Aux[T, I, O0] = ParamReader[T, I] { type O = O0 }
-}
+object ParamReader extends QueryStringReaders with OptionalParamReaders with RequiredParamReaders {
 
-trait RequiredParamReaders {
-  implicit def requiredParamReader[A, I, O0](implicit reader: ParamReader.Aux[NamedParam[A], I, Option[O0]]): ParamReader.Aux[NamedParam[RequiredParam[A]], I, O0] = new ParamReader[NamedParam[RequiredParam[A]], I] {
-    type O = O0
+  def apply[M[+_], I, O](f: I => M[O]): ParamReader[M, I, O] = fromKleisli(Kleisli(f))
 
-    def read(i: I, param: NamedParam[RequiredParam[A]]) = {
-      val nestedNamedParam = NamedParam[A](param.name, param.param.param) // params all the way down
-      reader.read(i, nestedNamedParam).flatMap((o: Option[O0]) => toSuccess(o)(NonEmptyList(ValidationError(param.param.errorMsg(nestedNamedParam), FieldName(param.name)))))
-    }
+  def fromKleisli[M[+_], I, O](k: Kleisli[M, I, O]): ParamReader[M, I, O] = new ParamReader[M, I, O] {
+
+    val reader: Kleisli[M, I, O] = k
   }
 }
 
-trait StringReaders {
-  import Param._
-
-  implicit val optionalStringQueryParamReader: ParamReader.Aux[NamedParam[QueryParam[String]], Request, Option[String]] = new ParamReader[NamedParam[QueryParam[String]], Request] {
-    type O = Option[String]
-
-    def read(request: Request, param: NamedParam[QueryParam[String]]) = {
-      Validation.success(request.parameters.get(param.name).filterNot(_.isEmpty))
-    }
-  }
-
+final case class FieldKey(name: String, prettyName: Option[String]) {
+  def displayName: String = prettyName.getOrElse(name)
 }

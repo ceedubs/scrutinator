@@ -6,37 +6,59 @@ import shapeless.tag
 import shapeless.tag.@@
 import org.scalatra.validation.{ FieldName, ValidationError }
 
-case class Param[A](
-  description: Option[String],
-  displayName: Option[String])
+/**
+  A: the value type
+  S: source (QueryString, Headers, etc)
+*/
+case class Param[A, S <: ValueSource](
+  description: Option[String] = Param.Defaults.description,
+  prettyName: Option[String] = Param.Defaults.prettyName,
+  validation: Kleisli[List, A, ValidationError] = Param.Defaults.validation[A])
 
 object Param {
-  import ValueSources._
+  import ValueSource._
 
-  type QueryParam[A] = Param[A] @@ QueryString
-  type HeaderParam[A] = Param[A] @@ Headers
+  type ParamValidation[A] = Kleisli[List, A, ValidationError]
 
-  def queryParam[A](description: Option[String] = None): QueryParam[A] = {
-    tag[QueryString].apply[Param[A]](
-      Param[A](description, None))
+  object Defaults {
+      val description: Option[String] = None
+      val prettyName: Option[String] = None
+      def validation[A]: ParamValidation[A] = Kleisli((_: A) => Nil)
   }
 
-  def headerParam[A](description: Option[String] = None): HeaderParam[A] = {
-    tag[Headers].apply[Param[A]](
-      Param[A](description, None))
+  type QueryParam[A] = Param[A, QueryString]
+  type HeaderParam[A] = Param[A, Headers]
+
+  def queryParam[A](
+      description: Option[String] = Defaults.description,
+      prettyName: Option[String] = Defaults.prettyName,
+      validation: ParamValidation[A] = Defaults.validation[A]): QueryParam[A] = {
+
+    Param[A, QueryString](description, prettyName, validation)
   }
+
+  def headerParam[A](
+      description: Option[String] = Defaults.description,
+      prettyName: Option[String] = Defaults.prettyName,
+      validation: ParamValidation[A] = Defaults.validation[A]): HeaderParam[A] = {
+
+    Param[A, Headers](description, prettyName, validation)
+  }
+
 }
 
-object ValueSources {
-  sealed trait QueryString
-  sealed trait Headers
-}
+trait ValueSource
 
-case class NamedParam[A](name: String, param: A)
+object ValueSource {
+  sealed trait QueryString extends ValueSource
+  sealed trait Headers extends ValueSource
+}
 
 case class RequiredParam[A](
   param: A,
   errorMsg: NamedParam[A] => String)
+
+case class NamedParam[A](name: String, param: A)
 
 @annotation.implicitNotFound("${K} is not a supported type for a field name.")
 trait NamedParamConverter[K] {
