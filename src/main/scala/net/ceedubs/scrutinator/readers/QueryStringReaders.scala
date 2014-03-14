@@ -4,6 +4,7 @@ package readers
 import scalaz.{ @@ => _, _}
 import shapeless.tag
 import shapeless.tag.@@
+import org.scalatra.validation.{ FieldName, ValidationError }
 
 trait QueryStringReaders {
   import QueryStringReaders._
@@ -24,6 +25,7 @@ trait QueryStringReaders {
     ParamReader.fromKleisli(kleisli)
  
   }
+
 }
 
 object QueryStringReaders extends QueryStringReaders {

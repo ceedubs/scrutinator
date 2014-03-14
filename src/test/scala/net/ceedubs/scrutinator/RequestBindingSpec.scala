@@ -31,8 +31,8 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
 
       RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
         case \/-(params) =>
-          params.get("first") must be_===(first.flatMap(blankOption))
-          params.get("second") must be_===(second.flatMap(blankOption))
+          params.get("first") ==== first.flatMap(blankOption)
+          params.get("second") ==== second.flatMap(blankOption)
       }
     }
 
@@ -62,8 +62,9 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
         ("first" ->> RequiredParam(queryParam[String](), (p: NamedParam[_]) => s"Hey! '${p.name}' is a required field!")) ::
         HNil
 
-      val expected = first.filterNot(_.isEmpty).map(_ :: HNil).toRightDisjunction(NonEmptyList(ValidationError("Hey! 'first' is a required field!", FieldName("first"))))
-      RequestBinding.bindFromRequest(fields, mockRequest) must be_===(expected)
+      val expected = first.filterNot(_.isEmpty).toRightDisjunction(NonEmptyList(ValidationError("Hey! 'first' is a required field!", FieldName("first"))))
+      RequestBinding.bindFromRequest(fields, mockRequest).map(_.get("first")) ==== expected
+
     }
   }
 }
