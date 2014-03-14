@@ -13,7 +13,8 @@ trait ParamReader[M[+_], I, +O] {
 
 }
 
-object ParamReader extends QueryStringReaders with OptionalParamReaders with RequiredParamReaders with NumberParamReaders {
+object ParamReader extends QueryStringReaders with OptionalParamReaders
+  with RequiredParamReaders with NumberParamReaders with HeaderReaders {
 
   def apply[M[+_], I, O](f: I => M[O]): ParamReader[M, I, O] = fromKleisli(Kleisli(f))
 

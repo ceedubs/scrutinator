@@ -21,12 +21,12 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
     "successfully bind valid params" ! prop { (first: Option[String], second: Option[String]) =>
       val mockRequest = mock[HttpServletRequest]
       mockRequest.getParameterMap returns Map(
-        "first" -> first.map(s => Array(s)).getOrElse(Array()),
-        "second" -> second.map(s => Array(s)).getOrElse(Array())
+        "first" -> first.map(s => Array(s)).getOrElse(Array())
       ).asJava
+      mockRequest.getHeader("second") returns second.orNull
       val fields =
         ("first" ->> queryParam[String]()) ::
-        ("second" ->> Param[String, QueryString]()) ::
+        ("second" ->> headerParam[String]()) ::
         HNil
 
       RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
