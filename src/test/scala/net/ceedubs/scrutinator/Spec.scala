@@ -19,4 +19,12 @@ trait ScrutinatorArb {
 
   implicit def arbParam[A, S <: ValueSource]: Arbitrary[Param[A, S]] = Arbitrary(genParam[A, S])
 
+  def genRequiredParam[P](implicit arbP: Arbitrary[P]): Gen[RequiredParam[P]] = {
+    for {
+      param <- arbP.arbitrary
+      errorMsg <- arbitrary[String]
+    } yield RequiredParam[P](param, _ => errorMsg)
+  }
+
+  implicit def arbRequiredParam[P : Arbitrary]: Arbitrary[RequiredParam[P]] = Arbitrary(genRequiredParam[P])
 }

@@ -9,11 +9,12 @@ class ToSwaggerParamsSpec extends Spec {
   import Param._
 
   "Swagger parameter conversion" should {
-    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Int], stringHeaderParam: HeaderParam[String]) =>
+    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Int], stringHeaderParam: RequiredParam[HeaderParam[String]]) =>
       val fields =
       ("queryInt" ->> intQueryParam) ::
       ("headerString" ->> stringHeaderParam) ::
       HNil
+
       SwaggerSupport.toSwaggerParams(fields) ==== Seq(
         Parameter(
           name = "queryInt",
@@ -27,12 +28,12 @@ class ToSwaggerParamsSpec extends Spec {
         Parameter(
           name = "headerString",
           `type` = DataType.String,
-          description = stringHeaderParam.description,
+          description = stringHeaderParam.param.description,
           notes = None,
           paramType = ParamType.Header,
           defaultValue = None,
           allowableValues = AllowableValues.AnyValue,
-          required = false)
+          required = true)
       )
     }
   }

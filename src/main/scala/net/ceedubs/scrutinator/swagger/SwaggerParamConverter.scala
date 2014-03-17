@@ -42,7 +42,7 @@ trait SwaggerParamConverter[A] {
   def apply(a: A): Parameter
 }
 
-object SwaggerParamConverter extends NamedParamConverters {
+object SwaggerParamConverter extends NamedParamConverters with RequiredParamConverters {
   def apply[A](f: A => Parameter): SwaggerParamConverter[A] = new SwaggerParamConverter[A] {
     def apply(a: A) = f(a)
   }
@@ -62,6 +62,15 @@ trait NamedParamConverters {
         allowableValues = AllowableValues.AnyValue, // TODO
         required = false,
         position = 0) // TODO
+    }
+  }
+}
+
+trait RequiredParamConverters {
+  implicit def namedRequiredParamConverter[A](implicit converter: SwaggerParamConverter[NamedParam[A]]): SwaggerParamConverter[NamedParam[RequiredParam[A]]] = {
+    SwaggerParamConverter[NamedParam[RequiredParam[A]]] { namedRequiredParam =>
+      val namedInnerParam = NamedParam[A](namedRequiredParam.name, namedRequiredParam.param.param)
+      converter(namedInnerParam).copy(required = true)
     }
   }
 }
