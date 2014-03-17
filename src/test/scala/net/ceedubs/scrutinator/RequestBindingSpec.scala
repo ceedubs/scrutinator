@@ -66,6 +66,19 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
       RequestBinding.bindFromRequest(fields, mockRequest).map(_.get("first")) ==== expected
 
     }
+
+    "bind default params" ! prop { (first: Option[String]) =>
+      val mockRequest = mock[HttpServletRequest]
+      mockRequest.getParameterMap returns Map(
+        "first" -> first.map(s => Array(s)).getOrElse(Array.empty)
+      ).asJava
+      val fields =
+        ("first" ->> ParamWithDefault(queryParam[String](), "<none provided>")) ::
+        HNil
+
+      val expected  = \/.right(first.filterNot(_.isEmpty).getOrElse("<none provided>"))
+      RequestBinding.bindFromRequest(fields, mockRequest).map(_.get("first")) ==== expected
+    }
   }
 }
 

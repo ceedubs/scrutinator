@@ -58,6 +58,10 @@ case class RequiredParam[A](
   param: A,
   errorMsg: NamedParam[A] => String)
 
+case class ParamWithDefault[A, S <: ValueSource](
+  param: Param[A, S],
+  default: A)
+
 case class NamedParam[A](name: String, param: A)
 
 @annotation.implicitNotFound("${K} is not a supported type for a field name.")
