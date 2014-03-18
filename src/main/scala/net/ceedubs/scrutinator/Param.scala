@@ -1,9 +1,7 @@
 package net.ceedubs.scrutinator
 
-import scalaz.{ @@ => _, _}
+import scalaz._
 import shapeless._
-import shapeless.tag
-import shapeless.tag.@@
 import org.scalatra.validation.{ FieldName, ValidationError }
 
 /**

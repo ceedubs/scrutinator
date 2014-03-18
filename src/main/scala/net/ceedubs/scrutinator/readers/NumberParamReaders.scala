@@ -1,7 +1,7 @@
 package net.ceedubs.scrutinator
 package readers
 
-import scalaz.{ @@ => _, _}
+import scalaz._
 
 trait NumberParamReaders {
   implicit def intFieldReader[I](implicit reader: ParamReader[ErrorsOrMaybe, (FieldKey, I), String]): ParamReader[ErrorsOrMaybe, (FieldKey, I), Int] = {

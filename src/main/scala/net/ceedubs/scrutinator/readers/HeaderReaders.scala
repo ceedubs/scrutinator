@@ -1,9 +1,7 @@
 package net.ceedubs.scrutinator
 package readers
 
-import scalaz.{ @@ => _, _}
-import shapeless.tag
-import shapeless.tag.@@
+import scalaz._
 import org.scalatra.validation.{ FieldName, ValidationError }
 
 trait HeaderReaders {
@@ -34,6 +32,6 @@ object HeaderReaders extends HeaderReaders {
   type HeaderParams = Map[String, String] @@ Headers
 
   object HeaderParams {
-    def apply(params: Map[String, String]): HeaderParams = tag[Headers].apply[Map[String, String]](params)
+    def apply(params: Map[String, String]): HeaderParams = Tag[Map[String, String], Headers](params)
   }
 }

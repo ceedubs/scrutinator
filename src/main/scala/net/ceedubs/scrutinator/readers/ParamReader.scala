@@ -1,7 +1,7 @@
 package net.ceedubs.scrutinator
 package readers
 
-import scalaz.{ @@ => _, _}
+import scalaz._
 import scalaz.std.option.toSuccess
 import org.scalatra.validation.{ FieldName, ValidationError }
 
