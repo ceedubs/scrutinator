@@ -42,7 +42,7 @@ trait SwaggerParamConverter[A] {
   def apply(a: A): Parameter
 }
 
-object SwaggerParamConverter extends NamedParamConverters with RequiredParamConverters {
+object SwaggerParamConverter extends NamedParamConverters with RequiredParamConverters with ParamWithDefaultConverters {
   def apply[A](f: A => Parameter): SwaggerParamConverter[A] = new SwaggerParamConverter[A] {
     def apply(a: A) = f(a)
   }
@@ -71,6 +71,17 @@ trait RequiredParamConverters {
     SwaggerParamConverter[NamedParam[RequiredParam[A]]] { namedRequiredParam =>
       val namedInnerParam = NamedParam[A](namedRequiredParam.name, namedRequiredParam.param.param)
       converter(namedInnerParam).copy(required = true)
+    }
+  }
+}
+
+trait ParamWithDefaultConverters {
+  implicit def ParamWithDefaultConverter[A, S <: ValueSource](implicit converter: SwaggerParamConverter[NamedParam[Param[A, S]]], showA: SwaggerShow[A]): SwaggerParamConverter[NamedParam[ParamWithDefault[A, S]]] = {
+    SwaggerParamConverter[NamedParam[ParamWithDefault[A, S]]] { namedParamWithDefault =>
+      val namedInnerParam = NamedParam[Param[A, S]](namedParamWithDefault.name, namedParamWithDefault.param.param)
+      converter(namedInnerParam).copy(
+        defaultValue = Some(showA.shows(
+          SwaggerSpec(namedParamWithDefault.param.default))))
     }
   }
 }
