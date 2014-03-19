@@ -11,17 +11,24 @@ import org.scalatra.validation.{ FieldName, ValidationError }
 case class Param[A, S <: ValueSource](
   description: Option[String] = Param.Defaults.description,
   prettyName: Option[String] = Param.Defaults.prettyName,
-  validation: Kleisli[List, A, ValidationError] = Param.Defaults.validation[A])
+  validations: Param.ParamValidations[A] = Param.Defaults.validations[A]) {
+
+  def check(errorMsg: => String)(f: A => Boolean): Param[A, S] = {
+    val newValidation = (fieldKey: FieldKey, a: A) => if (f(a)) Nil else errorMsg :: Nil
+    copy(validations = newValidation :: validations)
+  }
+
+}
 
 object Param {
   import ValueSource._
 
-  type ParamValidation[A] = Kleisli[List, A, ValidationError]
+  type ParamValidations[A] = List[Function2[FieldKey, A, List[String]]]
 
   object Defaults {
       val description: Option[String] = None
       val prettyName: Option[String] = None
-      def validation[A]: ParamValidation[A] = Kleisli((_: A) => Nil)
+      def validations[A]: ParamValidations[A] = Nil
   }
 
   type QueryParam[A] = Param[A, QueryString]
@@ -30,19 +37,23 @@ object Param {
   def queryParam[A](
       description: Option[String] = Defaults.description,
       prettyName: Option[String] = Defaults.prettyName,
-      validation: ParamValidation[A] = Defaults.validation[A]): QueryParam[A] = {
+      validations: ParamValidations[A] = Defaults.validations[A]): QueryParam[A] = {
 
-    Param[A, QueryString](description, prettyName, validation)
+    Param[A, QueryString](description, prettyName, validations)
   }
 
   def headerParam[A](
       description: Option[String] = Defaults.description,
       prettyName: Option[String] = Defaults.prettyName,
-      validation: ParamValidation[A] = Defaults.validation[A]): HeaderParam[A] = {
+      validations: ParamValidations[A] = Defaults.validations[A]): HeaderParam[A] = {
 
-    Param[A, Headers](description, prettyName, validation)
+    Param[A, Headers](description, prettyName, validations)
   }
 
+}
+
+final case class FieldKey(name: String, prettyName: Option[String]) {
+  def displayName: String = prettyName.getOrElse(name)
 }
 
 trait ValueSource

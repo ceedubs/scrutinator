@@ -36,6 +36,24 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
       }
     }
 
+    "produce validation errors for invalid params" ! prop { (first: String, second: String) =>
+      (!first.isEmpty && !second.isEmpty) ==> {
+        val mockRequest = mock[HttpServletRequest]
+        mockRequest.getParameterMap returns Map(
+          "first" -> Array(first)
+        ).asJava
+        mockRequest.getHeader("second") returns second
+        val fields =
+          ("first" ->> queryParam[String]().check("first failed!")(_ => false)) ::
+          ("second" ->> headerParam[String]().check("second failed!")(_ => false)) ::
+          HNil
+
+        RequestBinding.bindFromRequest(fields, mockRequest) ==== \/.left(NonEmptyList(
+          ValidationError("first failed!", FieldName("first")),
+          ValidationError("second failed!", FieldName("second"))))
+      }
+    }
+
     "fail to compile if an invalid param is accessed" in {
       val mockRequest = mock[HttpServletRequest]
       mockRequest.getParameterMap returns Map.empty[String, Array[String]].asJava

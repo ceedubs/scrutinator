@@ -23,18 +23,14 @@ object ParamReader extends QueryStringReaders with OptionalParamReaders
     val reader: Kleisli[M, I, O] = k
   }
 
-  def andThenCheck[I, A, B](r: ParamReader[ErrorsOrMaybe, (FieldKey, I), A])(f: A => Validation[String => NonEmptyList[String], B]): ParamReader[ErrorsOrMaybe, (FieldKey, I), B] = {
+  def andThenCheck[I, A, B](r: ParamReader[ErrorsOrMaybe, (FieldKey, I), A])(f: Function2[FieldKey, A, ValidationNel[String, B]]): ParamReader[ErrorsOrMaybe, (FieldKey, I), B] = {
     ParamReader[ErrorsOrMaybe, (FieldKey, I), B](Function.tupled { (fieldKey, input) =>
       r.reader((fieldKey, input)).flatMap { maybeA =>
-        std.option.cata(maybeA)(f andThen (_.leftMap(_(fieldKey.displayName).map(msg =>
-          ValidationError(msg, FieldName(fieldKey.name)))
-          ).map(Some.apply)
-        ), Validation.success(None))
+        std.option.cata(maybeA)(a => f(fieldKey, a)
+          .leftMap(_.map(errorMsg => ValidationError(errorMsg, FieldName(fieldKey.name))))
+          .map(Some.apply),
+        Validation.success(None))
       }
     })
   }
-}
-
-final case class FieldKey(name: String, prettyName: Option[String]) {
-  def displayName: String = prettyName.getOrElse(name)
 }

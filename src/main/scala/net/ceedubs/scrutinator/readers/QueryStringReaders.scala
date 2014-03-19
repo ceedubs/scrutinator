@@ -8,12 +8,18 @@ trait QueryStringReaders {
   import QueryStringReaders._
   import Param._
 
-  implicit def queryStringNamedParamReader[M[+_], A](implicit reader: ParamReader[M, (FieldKey, QueryStringParams), A]): ParamReader[M, (NamedParam[QueryParam[A]], Request), A] = {
-    reader.transform(_.local(Function.tupled { (param: NamedParam[QueryParam[A]], request: Request) =>
-      val fieldKey = FieldKey(name = param.name, prettyName = param.param.prettyName) 
+  implicit def queryStringNamedParamReader[A](implicit reader: ParamReader[ErrorsOrMaybe, (FieldKey, QueryStringParams), A]): ParamReader[ErrorsOrMaybe, (NamedParam[QueryParam[A]], Request), A] = {
+    ParamReader[ErrorsOrMaybe, (NamedParam[QueryParam[A]], Request), A](Function.tupled { (namedParam, request) =>
+      val fieldKey = FieldKey(name = namedParam.name, prettyName = namedParam.param.prettyName) 
       val queryParams = QueryStringParams(request.parameters)
-      (fieldKey, queryParams)
-    }))
+      reader.reader((fieldKey, queryParams)).flatMap { maybeA =>
+        std.option.cata(maybeA)({ a =>
+          val errors = namedParam.param.validations.map(_.apply(fieldKey, a)
+            .map(e => ValidationError(e, FieldName(fieldKey.name)))).flatten
+          std.option.toFailure(std.list.toNel(errors))(Some(a))
+        }, Validation.success(None))
+      }
+    })
   }
 
   implicit val queryStringStringFieldReader: ParamReader[ErrorsOrMaybe, (FieldKey, QueryStringParams), String] = {
