@@ -26,7 +26,7 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
       mockRequest.getHeader("second") returns second.orNull
       val fields =
         ("first" ->> queryParam[String]()) ::
-        ("second" ->> headerParam[String]()) ::
+        ("second" ->> headerParam[String]().check("oops!")(_ => true)) ::
         HNil
 
       RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
