@@ -65,6 +65,7 @@ libraryDependencies ++= Seq (
   "org.scalatra" %% "scalatra" % "2.3.0.M1",
   "org.scalatra" %% "scalatra-commands" % "2.3.0.M1",
   "org.scalatra" %% "scalatra-swagger"  % "2.3.0.M1",
+  "org.scalatra" %% "scalatra-specs2"  % "2.3.0.M1" % "test",
   "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" artifacts (Artifact("javax.servlet", "jar", "jar")),
   "org.specs2"     %% "specs2"         % "2.3.1"    % "test",
   "org.scalacheck" %% "scalacheck"     % "1.10.1"   % "test"

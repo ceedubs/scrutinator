@@ -41,6 +41,7 @@ object Param {
 
   type QueryParam[A] = Param[A, QueryString]
   type HeaderParam[A] = Param[A, Headers]
+  type PathParam[A] = Param[A, Path]
 
   def queryParam[A](
       description: Option[String] = Defaults.description,
@@ -60,6 +61,15 @@ object Param {
     Param[A, Headers](description, notes, prettyName, validations)
   }
 
+  def pathParam[A](
+      description: Option[String] = Defaults.description,
+      notes: Option[String] = Defaults.notes,
+      prettyName: Option[String] = Defaults.prettyName,
+      validations: ParamValidations[A] = Defaults.validations[A]): PathParam[A] = {
+
+    Param[A, Path](description, notes, prettyName, validations)
+  }
+
 }
 
 final case class FieldKey(name: String, prettyName: Option[String]) {
@@ -71,6 +81,7 @@ trait ValueSource
 object ValueSource {
   sealed trait QueryString extends ValueSource
   sealed trait Headers extends ValueSource
+  sealed trait Path extends ValueSource
 }
 
 case class RequiredParam[A](
