@@ -77,7 +77,7 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
         "first" -> first.map(s => Array(s)).getOrElse(Array())
       ).asJava
       val fields =
-        ("first" ->> RequiredParam(queryParam[String](), (p: NamedParam[_]) => s"Hey! '${p.name}' is a required field!")) ::
+        ("first" ->> queryParam[String]().required(p => s"Hey! '${p.name}' is a required field!")) ::
         HNil
 
       val expected = first.filterNot(_.isEmpty).toRightDisjunction(NonEmptyList(ValidationError("Hey! 'first' is a required field!", FieldName("first"))))
@@ -91,7 +91,7 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
         "first" -> first.map(s => Array(s)).getOrElse(Array.empty)
       ).asJava
       val fields =
-        ("first" ->> ParamWithDefault(queryParam[String](), "<none provided>")) ::
+        ("first" ->> queryParam[String]().withDefault("<none provided>")) ::
         HNil
 
       val expected  = \/.right(first.filterNot(_.isEmpty).getOrElse("<none provided>"))

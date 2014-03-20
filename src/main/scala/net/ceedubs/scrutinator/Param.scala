@@ -13,10 +13,16 @@ case class Param[A, S <: ValueSource](
   prettyName: Option[String] = Param.Defaults.prettyName,
   validations: Param.ParamValidations[A] = Param.Defaults.validations[A]) {
 
-  def check(errorMsg: => String)(f: A => Boolean): Param[A, S] = {
+  type Self = Param[A, S]
+
+  def check(errorMsg: => String)(f: A => Boolean): Self = {
     val newValidation = (fieldKey: FieldKey, a: A) => if (f(a)) Nil else errorMsg :: Nil
     copy(validations = newValidation :: validations)
   }
+
+  def required(errorMsg: NamedParam[Self] => String): RequiredParam[Self] = RequiredParam(this, errorMsg)
+
+  def withDefault(default: A): ParamWithDefault[A, S] = ParamWithDefault(this, default)
 
 }
 
