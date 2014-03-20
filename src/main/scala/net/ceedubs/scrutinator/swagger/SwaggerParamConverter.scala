@@ -56,12 +56,11 @@ trait NamedParamConverters {
         name = namedParam.name,
         `type` = dataTypeConverter.dataType,
         description = namedParam.param.description,
-        notes = None, // TODO
+        notes = namedParam.param.notes,
         paramType = sourceConverter.sourceType,
         defaultValue = None,
         allowableValues = AllowableValues.AnyValue, // TODO
-        required = false,
-        position = 0) // TODO
+        required = false)
     }
   }
 }

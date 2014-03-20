@@ -10,6 +10,7 @@ import org.scalatra.validation.{ FieldName, ValidationError }
 */
 case class Param[A, S <: ValueSource](
   description: Option[String] = Param.Defaults.description,
+  notes: Option[String] = Param.Defaults.notes,
   prettyName: Option[String] = Param.Defaults.prettyName,
   validations: Param.ParamValidations[A] = Param.Defaults.validations[A]) {
 
@@ -33,6 +34,7 @@ object Param {
 
   object Defaults {
       val description: Option[String] = None
+      val notes: Option[String] = None
       val prettyName: Option[String] = None
       def validations[A]: ParamValidations[A] = Nil
   }
@@ -42,18 +44,20 @@ object Param {
 
   def queryParam[A](
       description: Option[String] = Defaults.description,
+      notes: Option[String] = Defaults.notes,
       prettyName: Option[String] = Defaults.prettyName,
       validations: ParamValidations[A] = Defaults.validations[A]): QueryParam[A] = {
 
-    Param[A, QueryString](description, prettyName, validations)
+    Param[A, QueryString](description, notes, prettyName, validations)
   }
 
   def headerParam[A](
       description: Option[String] = Defaults.description,
+      notes: Option[String] = Defaults.notes,
       prettyName: Option[String] = Defaults.prettyName,
       validations: ParamValidations[A] = Defaults.validations[A]): HeaderParam[A] = {
 
-    Param[A, Headers](description, prettyName, validations)
+    Param[A, Headers](description, notes, prettyName, validations)
   }
 
 }

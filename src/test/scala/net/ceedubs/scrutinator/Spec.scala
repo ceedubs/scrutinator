@@ -11,9 +11,11 @@ trait ScrutinatorArb {
   def genParam[A, S <: ValueSource]: Gen[Param[A, S]] = {
     for {
       description <- arbitrary[Option[String]]
+      notes <- arbitrary[Option[String]]
       prettyName <- arbitrary[Option[String]]
     } yield Param[A, S](
       description = description,
+      notes = notes,
       prettyName = prettyName)
   }
 
