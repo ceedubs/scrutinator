@@ -5,7 +5,7 @@ import scalaz._
 import scalaz.std.option.toSuccess
 import org.scalatra.validation.{ FieldName, ValidationError }
 
-trait ParamReader[M[+_], I, +O] {
+trait ParamReader[M[+_], I, O] {
  
   def reader: Kleisli[M, I, O]
 

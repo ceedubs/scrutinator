@@ -1,8 +1,6 @@
 package net.ceedubs.scrutinator
 
-import org.specs2.mutable._
 import org.specs2.mock.Mockito
-import org.specs2.ScalaCheck
 import shapeless._
 import shapeless.syntax.singleton._
 import shapeless.test.illTyped
@@ -12,7 +10,7 @@ import javax.servlet.http.HttpServletRequest
 import scala.collection.JavaConverters._
 import org.scalatra.validation.{ FieldName, ValidationError }
 
-class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
+class RequestBindingSpec extends Spec with Mockito {
   import RequestBindingSpec._
   import Param._
   import ValueSource._
@@ -29,10 +27,15 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
         ("second" ->> headerParam[String]().check("oops!")(_ => true)) ::
         HNil
 
-      RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
+      val results = RequestBinding.bindFromRequest(fields, mockRequest)
+
+      typed[Errors \/ (Option[String], Option[String])](results.map(params =>
+        (params.get("first"), params.get("second"))))
+
+      results must beLike {
         case \/-(params) =>
-          params.get("first") ==== first.flatMap(blankOption)
-          params.get("second") ==== second.flatMap(blankOption)
+          first.flatMap(blankOption) ==== params.get("first")
+          second.flatMap(blankOption) ==== params.get("second")
       }
     }
 
@@ -48,7 +51,12 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
           ("second" ->> headerParam[String]().check("second failed!")(_ => false)) ::
           HNil
 
-        RequestBinding.bindFromRequest(fields, mockRequest) ==== \/.left(NonEmptyList(
+        val results = RequestBinding.bindFromRequest(fields, mockRequest)
+
+        typed[Errors \/ (Option[String], Option[String])](results.map(params =>
+          (params.get("first"), params.get("second"))))
+
+        results ==== \/.left(NonEmptyList(
           ValidationError("first failed!", FieldName("first")),
           ValidationError("second failed!", FieldName("second"))))
       }
@@ -64,8 +72,8 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
 
       RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
         case \/-(params) =>
-          params.get("first") // compiles
-          params.get("second") // compiles
+          typed[Option[String]](params.get("first")) // compiles
+          typed[Option[String]](params.get("second")) // compiles
           illTyped("""params.get("not-a-param")""") // wouldn't compile
           ok // as long as this test compiles, it should pass
       }
@@ -81,7 +89,7 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
         HNil
 
       val expected = first.filterNot(_.isEmpty).toRightDisjunction(NonEmptyList(ValidationError("Hey! 'first' is a required field!", FieldName("first"))))
-      RequestBinding.bindFromRequest(fields, mockRequest).map(_.get("first")) ==== expected
+      expected ==== RequestBinding.bindFromRequest(fields, mockRequest).map(_.get("first"))
 
     }
 
@@ -94,8 +102,10 @@ class RequestBindingSpec extends Specification with Mockito with ScalaCheck {
         ("first" ->> queryParam[String]().withDefault("<none provided>")) ::
         HNil
 
-      val expected  = \/.right(first.filterNot(_.isEmpty).getOrElse("<none provided>"))
-      RequestBinding.bindFromRequest(fields, mockRequest).map(_.get("first")) ==== expected
+      val expected  = \/.right[Errors, String](first.filterNot(_.isEmpty).getOrElse("<none provided>"))
+      val result = RequestBinding.bindFromRequest(fields, mockRequest).map(_.get("first"))
+      typed[Errors \/ String](result)
+      expected ==== result
     }
   }
 }

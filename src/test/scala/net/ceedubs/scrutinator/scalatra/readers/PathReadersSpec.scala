@@ -16,9 +16,10 @@ import org.scalatra.test.specs2._
 import org.scalatra.validation.{ FieldName, ValidationError }
 import Param._
 import ValueSource._
-import PathReadersSpec._
 
-class PathReadersSpec extends Specification with Mockito with ScalaCheck with MutableScalatraSpec {
+class PathReadersSpec extends Spec with Mockito with MutableScalatraSpec {
+  import PathReadersSpec._
+
   addServlet(classOf[PathReadersSpecServlet], "/*")
 
  "Path param readers" should {
@@ -45,7 +46,7 @@ class PathReadersSpec extends Specification with Mockito with ScalaCheck with Mu
   }
 }
 
-object PathReadersSpec {
+object PathReadersSpec extends SpecHelpers {
   class PathReadersSpecServlet extends SpecServlet {
     val fields1 =
       ("int" ->> pathParam[Int]().required(_ => "int path param is required!")) ::
@@ -53,6 +54,8 @@ object PathReadersSpec {
       HNil
     get("/test1/:int/:string") {
       RequestBinding.bindFromRequest(fields1, request).map { params =>
+        typed[Int](params.get("int"))
+        typed[String](params.get("string"))
         s"${params.get("int")}-${params.get("string")}"
       }
     }
@@ -67,6 +70,8 @@ object PathReadersSpec {
       HNil
     get("/test2/:int/:string") {
       RequestBinding.bindFromRequest(fields2, request).map { params =>
+        typed[Int](params.get("int"))
+        typed[String](params.get("string"))
         s"${params.get("int")}-${params.get("string")}"
       }
     }

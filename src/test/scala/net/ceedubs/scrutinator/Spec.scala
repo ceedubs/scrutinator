@@ -5,7 +5,14 @@ import org.specs2.ScalaCheck
 import org.scalacheck._
 import org.scalacheck.Arbitrary.arbitrary
 
-abstract class Spec extends Specification with ScalaCheck with ScrutinatorArb
+abstract class Spec extends Specification
+  with ScalaCheck
+  with ScrutinatorArb
+  with SpecHelpers
+
+trait SpecHelpers {
+  def typed[A](a: => A) {}
+}
 
 trait ScrutinatorArb {
   def genParam[A, S <: ValueSource]: Gen[Param[A, S]] = {

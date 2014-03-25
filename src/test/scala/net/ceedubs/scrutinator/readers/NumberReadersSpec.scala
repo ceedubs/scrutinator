@@ -1,9 +1,7 @@
 package net.ceedubs.scrutinator
 package readers
 
-import org.specs2.mutable._
 import org.specs2.mock.Mockito
-import org.specs2.ScalaCheck
 import shapeless._
 import shapeless.syntax.singleton._
 import shapeless.test.illTyped
@@ -13,7 +11,7 @@ import javax.servlet.http.HttpServletRequest
 import scala.collection.JavaConverters._
 import org.scalatra.validation.{ FieldName, ValidationError }
 
-class NumberReadersSpec extends Specification with Mockito with ScalaCheck {
+class NumberReadersSpec extends Spec with Mockito {
   import Param._
   import ValueSource._
 
@@ -43,12 +41,12 @@ class NumberReadersSpec extends Specification with Mockito with ScalaCheck {
         HNil
       RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
         case \/-(params) =>
-          params.get("int") ==== int
-          params.get("long") ==== long
-          params.get("byte") ==== byte
-          params.get("double") ==== double
-          params.get("float") ==== float
-          params.get("short") ==== short
+          int ==== params.get("int")
+          long ==== params.get("long")
+          byte ==== params.get("byte")
+          double ==== params.get("double")
+          float ==== params.get("float")
+          short ==== params.get("short")
       }
     }
 
@@ -71,7 +69,20 @@ class NumberReadersSpec extends Specification with Mockito with ScalaCheck {
           ("float" ->> queryParam[Float]()) ::
           ("short" ->> queryParam[Short]()) ::
           HNil
-        RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
+
+        val result = RequestBinding.bindFromRequest(fields, mockRequest)
+
+        val tupledResult = result.map(params => (
+          params.get("int"),
+          params.get("long"),
+          params.get("byte"),
+          params.get("double"),
+          params.get("float"),
+          params.get("short")))
+
+         typed[Errors \/ (Option[Int], Option[Long], Option[Byte], Option[Double], Option[Float], Option[Short])](tupledResult)
+
+        result must beLike {
           case -\/(errors) =>
             errors ==== NonEmptyList(
               ValidationError("my int must be a valid integer", FieldName("int")),
