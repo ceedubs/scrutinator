@@ -14,15 +14,6 @@ Scrutinator is a request binding/validation library with an emphasis on type saf
 2. Convenient - should be able to bind multiple values at once and get a Validation of the sequenced individual validations
 3. Swagger integration - bindings can be used to generate Swagger specs
 
-## Build & run ##
-
-```sh
-$ cd scalatra-shapeless-bindings
-$ chmod u+x sbt
-$ ./sbt
-> +run
-```
-
 ## Contact ##
 
 - Cody Allen
