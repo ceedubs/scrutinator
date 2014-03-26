@@ -82,6 +82,7 @@ object ValueSource {
   sealed trait QueryString extends ValueSource
   sealed trait Headers extends ValueSource
   sealed trait Path extends ValueSource
+  sealed trait Json extends ValueSource
 }
 
 case class RequiredParam[A](

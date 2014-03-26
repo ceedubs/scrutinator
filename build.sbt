@@ -68,7 +68,8 @@ libraryDependencies ++= Seq (
   "org.scalatra" %% "scalatra-specs2"  % "2.3.0.M1" % "test",
   "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" artifacts (Artifact("javax.servlet", "jar", "jar")),
   "org.specs2"     %% "specs2"         % "2.3.1"    % "test",
-  "org.scalacheck" %% "scalacheck"     % "1.10.1"   % "test"
+  "org.scalacheck" %% "scalacheck"     % "1.10.1"   % "test",
+  "org.json4s" %% "json4s-jackson" % "3.2.7"
 )
 
 /* you may need these repos */
