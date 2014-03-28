@@ -38,6 +38,8 @@ abstract class Spec extends Specification
 
 trait SpecHelpers {
   def typed[A](a: => A) {}
+
+  def urlEncode(s: String): String = java.net.URLEncoder.encode(s, "UTF-8").replace("+", "%20")
 }
 
 trait ScrutinatorArb {

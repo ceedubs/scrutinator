@@ -2,6 +2,8 @@ package net.ceedubs.scrutinator
 package swagger
 
 import org.scalatra.swagger.{ AllowableValues, DataType, Parameter, ParamType }
+import net.ceedubs.scrutinator.json4s.readers._
+import net.ceedubs.scrutinator.json4s.readers.JsonParam._
 import shapeless._
 import shapeless.syntax.singleton._
 
@@ -10,11 +12,16 @@ class ToSwaggerParamsSpec extends Spec {
   import ValueSource._
 
   "Swagger parameter conversion" should {
-    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Int], stringHeaderParam: RequiredParam[HeaderParam[String]], longQueryParam: ParamWithDefault[Long, QueryString]) =>
+    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Int], stringHeaderParam: RequiredParam[HeaderParam[String]], longQueryParam: ParamWithDefault[Long, QueryString], intJsonParam: JsonFieldParam[Int], stringJsonParam: JsonFieldParam[String], longJsonParam: JsonFieldParam[Long]) =>
       val fields =
       ("queryInt" ->> intQueryParam) ::
       ("headerString" ->> stringHeaderParam) ::
       ("queryLong" ->> longQueryParam) ::
+      ("JsonBody" ->> JsonObjectParam(
+        ("jsonInt" ->> intJsonParam) ::
+        ("jsonString" ->> stringJsonParam) ::
+        ("jsonLong" ->> longJsonParam ::
+        HNil))) ::
       HNil
 
       SwaggerSupport.toSwaggerParams(fields) ==== Seq(
@@ -43,6 +50,15 @@ class ToSwaggerParamsSpec extends Spec {
           notes = longQueryParam.param.notes,
           paramType = ParamType.Query,
           defaultValue = Some(longQueryParam.default.toString),
+          allowableValues = AllowableValues.AnyValue,
+          required = false),
+        Parameter(
+          name = "JsonBody",
+          `type` = DataType("JsonBody"),
+          description = None,
+          notes = None,
+          paramType = ParamType.Body,
+          defaultValue = None,
           allowableValues = AllowableValues.AnyValue,
           required = false)
       )

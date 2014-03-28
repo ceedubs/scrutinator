@@ -1,6 +1,8 @@
 package net.ceedubs.scrutinator
 package swagger
 
+import net.ceedubs.scrutinator.json4s.readers.JsonObjectParam
+import shapeless._
 import org.scalatra.swagger.{ AllowableValues, DataType, Parameter }
 import ValueSource._
 
@@ -36,6 +38,9 @@ object SwaggerSourceConverter {
 
   implicit val queryStringSourceConverter: SwaggerSourceConverter[QueryString] =
     SwaggerSourceConverter(org.scalatra.swagger.ParamType.Query)
+
+  implicit val jsonBodySourceConverter: SwaggerSourceConverter[Json] =
+    SwaggerSourceConverter(org.scalatra.swagger.ParamType.Body)
 }
 
 trait SwaggerParamConverter[A] {
@@ -63,6 +68,21 @@ trait NamedParamConverters {
         required = false)
     }
   }
+
+  //implicit def namedJsonObjectParamConverter[L <: HList](implicit sourceConverter: SwaggerSourceConverter[ValueSource.Json]): SwaggerParamConverter[NamedParam[JsonObjectParam[L]]] = ???
+
+  implicit def namedJsonObjectParamConverter[L <: HList](implicit modelConverter: SwaggerModelConverter[NamedParam[JsonObjectParam[L]]], sourceConverter: SwaggerSourceConverter[ValueSource.Json]): SwaggerParamConverter[NamedParam[JsonObjectParam[L]]] =
+    SwaggerParamConverter[NamedParam[JsonObjectParam[L]]](namedParam =>
+      Parameter(
+        name = namedParam.name,
+        `type` = DataType(namedParam.name),
+        description = None, // TODO
+        notes = None, // TODO
+        paramType = sourceConverter.sourceType,
+        defaultValue = None,
+        allowableValues = AllowableValues.AnyValue, // TODO
+        required = false))
+ 
 }
 
 trait RequiredParamConverters {

@@ -25,8 +25,7 @@ class PathReadersSpec extends Spec with Mockito with MutableScalatraSpec {
  "Path param readers" should {
     "successfully bind valid params" ! prop { (int: Int, string: String) =>
       (!string.isEmpty) ==> {
-        val urlEncodedString = java.net.URLEncoder.encode(string, "UTF-8")
-        get(s"/test1/$int/$urlEncodedString") {
+        get(s"/test1/$int/${urlEncode(string)}") {
           status ==== 200
           body ==== s"$int-$string"
         }
@@ -34,8 +33,7 @@ class PathReadersSpec extends Spec with Mockito with MutableScalatraSpec {
     }
     "provide error messages for invalid  params" ! prop { (int: Int, string: String) =>
       (!string.isEmpty) ==> {
-        val urlEncodedString = java.net.URLEncoder.encode(string, "UTF-8")
-        get(s"/test2/$int/$urlEncodedString") {
+        get(s"/test2/$int/${urlEncode(string)}") {
           status ==== 422
           body ==== NonEmptyList(
             ValidationError("int should fail", FieldName("int")),
