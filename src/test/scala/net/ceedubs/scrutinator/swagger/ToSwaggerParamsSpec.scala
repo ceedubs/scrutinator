@@ -24,7 +24,7 @@ class ToSwaggerParamsSpec extends Spec {
         HNil))) ::
       HNil
 
-      SwaggerSupport.toSwaggerParams(fields) ==== Seq(
+      val expectedParams = Seq(
         Parameter(
           name = "queryInt",
           `type` = DataType.Int,
@@ -62,6 +62,12 @@ class ToSwaggerParamsSpec extends Spec {
           allowableValues = AllowableValues.AnyValue,
           required = false)
       )
+
+      def convertModel[A](param: A)(implicit converter: SwaggerModelConverter[A]) = converter(param)
+
+      val expectedModels = Map(
+        "JsonBody" -> convertModel(NamedParam("JsonBody", fields.get("JsonBody"))).eval(Map.empty))
+      (expectedModels, expectedParams) ==== SwaggerSupport.toSwaggerParams(fields).apply(Map.empty)
     }
   }
 }

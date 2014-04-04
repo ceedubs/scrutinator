@@ -1,10 +1,13 @@
 package net.ceedubs.scrutinator
 package swagger
 
+import scalaz._
+import scalaz.Leibniz._
 import shapeless._
 import shapeless.record._
+import shapeless.contrib.scalaz._
 import shapeless.ops.hlist.{ Mapper, ToList }
-import org.scalatra.swagger.Parameter
+import org.scalatra.swagger.{ Model, Parameter }
 
 object SwaggerSupport {
 
@@ -14,7 +17,7 @@ object SwaggerSupport {
       swaggerConverter(namedParam) }
   }
 
-  def toSwaggerParams[I <: HList, O <: HList](fields: I)(implicit mapper: Mapper.Aux[toSwaggerParam.type, I, O], toList: ToList[O, Parameter]): Seq[Parameter] = {
-    toList(mapper(fields))
+  def toSwaggerParams[F[_], I <: HList, O <: HList](fields: I)(implicit traverser: TraverserAux[I, toSwaggerParam.type, F, O], ev: F[O] === State[Map[String, Model], O], toList: ToList[O, Parameter]): State[Map[String, Model], Seq[Parameter]] = {
+    ev(traverser(fields)).map(toList.apply)
   }
 }
