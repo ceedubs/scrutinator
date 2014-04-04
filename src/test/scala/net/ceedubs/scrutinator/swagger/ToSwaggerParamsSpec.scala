@@ -66,7 +66,7 @@ class ToSwaggerParamsSpec extends Spec {
       def convertModel[A](param: A)(implicit converter: SwaggerModelConverter[A]) = converter(param)
 
       val expectedModels = Map(
-        "JsonBody" -> convertModel(NamedParam("JsonBody", fields.get("JsonBody"))).eval(Map.empty))
+        ModelId("JsonBody") -> convertModel(NamedParam("JsonBody", fields.get("JsonBody"))).eval(Map.empty))
       (expectedModels, expectedParams) ==== SwaggerSupport.toSwaggerParams(fields).apply(Map.empty)
     }
   }

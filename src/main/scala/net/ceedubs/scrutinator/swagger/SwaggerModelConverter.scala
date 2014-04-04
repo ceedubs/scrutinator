@@ -11,6 +11,12 @@ import shapeless.ops.hlist.{ Mapper, ToList }
 import shapeless.contrib.scalaz._
 import org.scalatra.swagger.{ AllowableValues, DataType, Model, ModelProperty }
 
+sealed trait SwaggerModelId
+
+object ModelId {
+  def apply(id: String): ModelId = Tag[String, SwaggerModelId](id)
+}
+
 trait SwaggerModelConverter[A] {
   def apply(a: A): ModelState[Model]
 }
@@ -42,8 +48,9 @@ object toSwaggerModelProperty extends Poly1 {
 trait JsonBodyModelConverters {
   implicit def namedJsonBodyConverter[F[_], L <: HList, O <: HList](implicit traverser: TraverserAux[L, toSwaggerModelProperty.type, F, O], toList: ToList[O, NamedParam[ModelProperty]], ev: F[O] === ModelState[O]): SwaggerModelConverter[NamedParam[JsonObjectParam[L]]] =
     SwaggerModelConverter[NamedParam[JsonObjectParam[L]]](namedParam =>
-      ModelState[Model](s =>
-        s.get(namedParam.name)
+      ModelState[Model] { s =>
+        val modelId = ModelId(namedParam.name) // TODO this is awful
+        s.get(modelId)
         .map(m => s -> m)
         .getOrElse {
           val (s2, fields) = ev(traverser(namedParam.param.fields)).apply(s)
@@ -53,8 +60,8 @@ trait JsonBodyModelConverters {
             qualifiedName = None,
             description = None,
             properties = toList(fields).map(p => (p.name, p.param)))
-          (s2 + (namedParam.name -> model), model)
-        }))
+          (s2 + (modelId -> model), model)
+        }})
 }
 
 trait JsonFieldModelPropertyConverters {

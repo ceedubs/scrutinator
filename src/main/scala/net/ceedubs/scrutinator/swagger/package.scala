@@ -7,6 +7,7 @@ import org.scalatra.swagger.Model
 
 package object swagger extends SwaggerShowInstances {
   type SwaggerShow[A] = Show[A @@ SwaggerSpec]
-  type ModelsCache = Map[String, Model]
+  type ModelId = String @@ SwaggerModelId
+  type ModelsCache = Map[ModelId, Model]
   type ModelState[A] = State[ModelsCache, A]
 }

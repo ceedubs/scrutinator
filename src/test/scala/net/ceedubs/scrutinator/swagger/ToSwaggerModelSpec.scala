@@ -37,7 +37,7 @@ class ToSwaggerModelSpec extends Spec {
 
       def convert[A](param: A)(implicit converter: SwaggerModelConverter[A]) = converter(param)
 
-      (Map("JsonBody" -> expected), expected) ==== convert(NamedParam("JsonBody", bodyFields.get("JsonBody"))).apply(Map.empty[String, Model])
+      (Map(ModelId("JsonBody") -> expected), expected) ==== convert(NamedParam("JsonBody", bodyFields.get("JsonBody"))).apply(Map.empty)
     }
   }
 }
