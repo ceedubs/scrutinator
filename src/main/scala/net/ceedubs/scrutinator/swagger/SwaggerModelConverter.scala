@@ -46,17 +46,17 @@ object toSwaggerModelProperty extends Poly1 {
 }
 
 trait JsonBodyModelConverters {
-  implicit def namedJsonBodyConverter[F[_], L <: HList, O <: HList](implicit traverser: TraverserAux[L, toSwaggerModelProperty.type, F, O], toList: ToList[O, NamedParam[ModelProperty]], ev: F[O] === ModelState[O]): SwaggerModelConverter[NamedParam[JsonObjectParam[L]]] =
-    SwaggerModelConverter[NamedParam[JsonObjectParam[L]]](namedParam =>
+  implicit def namedJsonModelConverter[F[_], L <: HList, O <: HList](implicit traverser: TraverserAux[L, toSwaggerModelProperty.type, F, O], toList: ToList[O, NamedParam[ModelProperty]], ev: F[O] === ModelState[O]): SwaggerModelConverter[NamedParam[JsonModelParam[L]]] =
+    SwaggerModelConverter[NamedParam[JsonModelParam[L]]](namedParam =>
       ModelState[Model] { s =>
-        val modelId = ModelId(namedParam.name) // TODO this is awful
+        val modelId = ModelId(namedParam.param.modelId)
         s.get(modelId)
         .map(m => s -> m)
         .getOrElse {
           val (s2, fields) = ev(traverser(namedParam.param.fields)).apply(s)
           val model = Model(
-            id = namedParam.name,
-            name = namedParam.name,
+            id = modelId,
+            name = modelId,
             qualifiedName = None,
             description = None,
             properties = toList(fields).map(p => (p.name, p.param)))

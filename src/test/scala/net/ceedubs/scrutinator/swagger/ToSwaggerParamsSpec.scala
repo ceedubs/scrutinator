@@ -14,15 +14,16 @@ class ToSwaggerParamsSpec extends Spec {
   "Swagger parameter conversion" should {
     "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Int], stringHeaderParam: RequiredParam[HeaderParam[String]], longQueryParam: ParamWithDefault[Long, QueryString], intJsonParam: JsonFieldParam[Int], stringJsonParam: JsonFieldParam[String], longJsonParam: JsonFieldParam[Long]) =>
       val fields =
-      ("queryInt" ->> intQueryParam) ::
-      ("headerString" ->> stringHeaderParam) ::
-      ("queryLong" ->> longQueryParam) ::
-      ("JsonBody" ->> JsonObjectParam(
-        ("jsonInt" ->> intJsonParam) ::
-        ("jsonString" ->> stringJsonParam) ::
-        ("jsonLong" ->> longJsonParam ::
-        HNil))) ::
-      HNil
+        ("queryInt" ->> intQueryParam) ::
+        ("headerString" ->> stringHeaderParam) ::
+        ("queryLong" ->> longQueryParam) ::
+        ("body" ->> JsonModelParam(
+          modelId = "JsonBody",
+          fields =
+            ("jsonInt" ->> intJsonParam) ::
+            ("jsonString" ->> stringJsonParam) ::
+            ("jsonLong" ->> longJsonParam) :: HNil)
+        ) :: HNil
 
       val expectedParams = Seq(
         Parameter(
@@ -53,7 +54,7 @@ class ToSwaggerParamsSpec extends Spec {
           allowableValues = AllowableValues.AnyValue,
           required = false),
         Parameter(
-          name = "JsonBody",
+          name = "body",
           `type` = DataType("JsonBody"),
           description = None,
           notes = None,
@@ -66,7 +67,7 @@ class ToSwaggerParamsSpec extends Spec {
       def convertModel[A](param: A)(implicit converter: SwaggerModelConverter[A]) = converter(param)
 
       val expectedModels = Map(
-        ModelId("JsonBody") -> convertModel(NamedParam("JsonBody", fields.get("JsonBody"))).eval(Map.empty))
+        ModelId("JsonBody") -> convertModel(NamedParam("body", fields.get("body"))).eval(Map.empty))
       (expectedModels, expectedParams) ==== SwaggerSupport.toSwaggerParams(fields).apply(Map.empty)
     }
   }

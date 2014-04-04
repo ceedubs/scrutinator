@@ -7,6 +7,10 @@ import org.scalatra.swagger.{ AllowableValues, DataType, Model, Parameter }
 import ValueSource._
 import scalaz._
 
+case class JsonModelParam[L <: HList](modelId: String, fields: L) {
+  def toJsonObjectParam: JsonObjectParam[L] = JsonObjectParam(fields)
+}
+
 trait SwaggerDataTypeConverter[A] {
   def dataType: DataType
 }
@@ -70,10 +74,8 @@ trait NamedParamConverters {
     }
   }
 
-  //implicit def namedJsonObjectParamConverter[L <: HList](implicit sourceConverter: SwaggerSourceConverter[ValueSource.Json]): SwaggerParamConverter[NamedParam[JsonObjectParam[L]]] = ???
-
-  implicit def namedJsonObjectParamConverter[L <: HList](implicit modelConverter: SwaggerModelConverter[NamedParam[JsonObjectParam[L]]], sourceConverter: SwaggerSourceConverter[ValueSource.Json]): SwaggerParamConverter[NamedParam[JsonObjectParam[L]]] =
-    SwaggerParamConverter[NamedParam[JsonObjectParam[L]]]{ namedParam =>
+  implicit def namedJsonModelParamConverter[L <: HList](implicit modelConverter: SwaggerModelConverter[NamedParam[JsonModelParam[L]]], sourceConverter: SwaggerSourceConverter[ValueSource.Json]): SwaggerParamConverter[NamedParam[JsonModelParam[L]]] =
+    SwaggerParamConverter[NamedParam[JsonModelParam[L]]]{ namedParam =>
       for {
         model <- modelConverter(namedParam)
       } yield Parameter(

@@ -11,11 +11,13 @@ class ToSwaggerModelSpec extends Spec {
   "Swagger model conversion" should {
     "convert a JSON object param into a model" ! prop { (intJsonParam: JsonFieldParam[Int], requiredStringJsonParam: RequiredParam[JsonFieldParam[String]], longJsonParam: JsonFieldParam[Long]) =>
       val bodyFields =
-        ("JsonBody" ->> JsonObjectParam(
-          ("jsonInt" ->> intJsonParam) ::
-          ("requiredJsonString" ->> requiredStringJsonParam) ::
-          ("jsonLong" ->> longJsonParam) ::
-          HNil) ::
+        ("body" ->> JsonModelParam(
+          modelId = "JsonBody",
+          fields = 
+            ("jsonInt" ->> intJsonParam) ::
+            ("requiredJsonString" ->> requiredStringJsonParam) ::
+            ("jsonLong" ->> longJsonParam) ::
+            HNil) ::
         HNil)
 
       val expected = Model(
@@ -37,7 +39,7 @@ class ToSwaggerModelSpec extends Spec {
 
       def convert[A](param: A)(implicit converter: SwaggerModelConverter[A]) = converter(param)
 
-      (Map(ModelId("JsonBody") -> expected), expected) ==== convert(NamedParam("JsonBody", bodyFields.get("JsonBody"))).apply(Map.empty)
+      (Map(ModelId("JsonBody") -> expected), expected) ==== convert(NamedParam("body", bodyFields.get("body"))).apply(Map.empty)
     }
   }
 }
