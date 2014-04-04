@@ -12,21 +12,21 @@ import shapeless.contrib.scalaz._
 import org.scalatra.swagger.{ AllowableValues, DataType, Model, ModelProperty }
 
 trait SwaggerModelConverter[A] {
-  def apply(a: A): State[Map[String, Model], Model]
+  def apply(a: A): ModelState[Model]
 }
 
 object SwaggerModelConverter extends JsonBodyModelConverters {
-  def apply[A](f: A => State[Map[String, Model], Model]): SwaggerModelConverter[A] = new SwaggerModelConverter[A] {
+  def apply[A](f: A => ModelState[Model]): SwaggerModelConverter[A] = new SwaggerModelConverter[A] {
     def apply(a: A) = f(a)
   }
 }
 
 trait SwaggerModelPropertyConverter[A] {
-  def apply(a: A): State[Map[String, Model], ModelProperty]
+  def apply(a: A): ModelState[ModelProperty]
 }
 
 object SwaggerModelPropertyConverter extends JsonFieldModelPropertyConverters {
-  def apply[A](f: A => State[Map[String, Model], ModelProperty]): SwaggerModelPropertyConverter[A] = new SwaggerModelPropertyConverter[A] {
+  def apply[A](f: A => ModelState[ModelProperty]): SwaggerModelPropertyConverter[A] = new SwaggerModelPropertyConverter[A] {
     def apply(a: A) = f(a)
   }
 }
@@ -40,9 +40,9 @@ object toSwaggerModelProperty extends Poly1 {
 }
 
 trait JsonBodyModelConverters {
-  implicit def namedJsonBodyConverter[F[_], L <: HList, O <: HList](implicit traverser: TraverserAux[L, toSwaggerModelProperty.type, F, O], toList: ToList[O, NamedParam[ModelProperty]], ev: F[O] === State[Map[String, Model], O]): SwaggerModelConverter[NamedParam[JsonObjectParam[L]]] =
+  implicit def namedJsonBodyConverter[F[_], L <: HList, O <: HList](implicit traverser: TraverserAux[L, toSwaggerModelProperty.type, F, O], toList: ToList[O, NamedParam[ModelProperty]], ev: F[O] === ModelState[O]): SwaggerModelConverter[NamedParam[JsonObjectParam[L]]] =
     SwaggerModelConverter[NamedParam[JsonObjectParam[L]]](namedParam =>
-      State[Map[String, Model], Model](s =>
+      ModelState[Model](s =>
         s.get(namedParam.name)
         .map(m => s -> m)
         .getOrElse {
@@ -72,4 +72,8 @@ trait JsonFieldModelPropertyConverters {
       converter(nestedNamedParam).map(_.copy(required = true))
     }
 
+}
+
+object ModelState {
+  def apply[A](f: ModelsCache => (ModelsCache, A)): ModelState[A] = State[ModelsCache, A](f)
 }

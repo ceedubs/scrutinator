@@ -17,7 +17,7 @@ object SwaggerSupport {
       swaggerConverter(namedParam) }
   }
 
-  def toSwaggerParams[F[_], I <: HList, O <: HList](fields: I)(implicit traverser: TraverserAux[I, toSwaggerParam.type, F, O], ev: F[O] === State[Map[String, Model], O], toList: ToList[O, Parameter]): State[Map[String, Model], Seq[Parameter]] = {
+  def toSwaggerParams[F[_], I <: HList, O <: HList](fields: I)(implicit traverser: TraverserAux[I, toSwaggerParam.type, F, O], ev: F[O] === ModelState[O], toList: ToList[O, Parameter]): ModelState[Seq[Parameter]] = {
     ev(traverser(fields)).map(toList.apply)
   }
 }

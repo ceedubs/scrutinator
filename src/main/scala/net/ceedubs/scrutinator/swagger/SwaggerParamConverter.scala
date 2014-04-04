@@ -45,11 +45,11 @@ object SwaggerSourceConverter {
 }
 
 trait SwaggerParamConverter[A] {
-  def apply(a: A): State[Map[String, Model], Parameter]
+  def apply(a: A): ModelState[Parameter]
 }
 
 object SwaggerParamConverter extends NamedParamConverters with RequiredParamConverters with ParamWithDefaultConverters {
-  def apply[A](f: A => State[Map[String, Model], Parameter]): SwaggerParamConverter[A] = new SwaggerParamConverter[A] {
+  def apply[A](f: A => ModelState[Parameter]): SwaggerParamConverter[A] = new SwaggerParamConverter[A] {
     def apply(a: A) = f(a)
   }
 }
