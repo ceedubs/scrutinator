@@ -2,10 +2,14 @@ package net.ceedubs.scrutinator
 package swagger
 
 import net.ceedubs.scrutinator.json4s.readers.JsonObjectParam
-import shapeless._
 import org.scalatra.swagger.{ AllowableValues, DataType, Model, Parameter }
 import ValueSource._
 import scalaz._
+import scalaz.Leibniz._
+import shapeless._
+import shapeless.contrib.scalaz._
+import shapeless.ops.hlist.ToList
+import shapeless.record._
 
 case class JsonModelParam[L <: HList](modelId: String, fields: L) {
   def toJsonObjectParam: JsonObjectParam[L] = JsonObjectParam(fields)
@@ -24,6 +28,8 @@ object SwaggerDataTypeConverter {
   implicit val stringSwaggerDataConverter: SwaggerDataTypeConverter[String] = apply[String](DataType.String)
   implicit val booleanSwaggerDataConverter: SwaggerDataTypeConverter[Boolean] = apply[Boolean](DataType.Boolean)
   implicit val longSwaggerDataConverter: SwaggerDataTypeConverter[Long] = apply[Long](DataType.Long)
+  implicit val floatSwaggerDataConverter: SwaggerDataTypeConverter[Float] = apply[Float](DataType.Float)
+  implicit val doubleSwaggerDataConverter: SwaggerDataTypeConverter[Double] = apply[Double](DataType.Double)
   implicit val dateSwaggerDataConverter: SwaggerDataTypeConverter[java.util.Date] = apply[java.util.Date](DataType.Date)
 
 }
@@ -109,4 +115,24 @@ trait ParamWithDefaultConverters {
           SwaggerSpec(namedParamWithDefault.param.default)))))
     }
   }
+}
+
+trait FieldListSwaggerConverter[L <: HList] {
+  def apply(fields: L): ModelState[Seq[Parameter]]
+}
+
+object FieldListSwaggerConverter {
+
+  implicit def toSwaggerParamConverter[F[_], L <: HList, O <: HList](implicit traverser: TraverserAux[L, toSwaggerParam.type, F, O], ev: F[O] === ModelState[O], toList: ToList[O, Parameter]): FieldListSwaggerConverter[L] = new FieldListSwaggerConverter[L] {
+    def apply(fields: L) = ev(traverser(fields)).map(toList.apply)
+  }
+
+  def toSwaggerParams[L <: HList](fields: L)(implicit converter: FieldListSwaggerConverter[L]): ModelState[Seq[Parameter]] =
+    converter(fields)
+}
+
+object toSwaggerParam extends Poly1 {
+  implicit def swaggerParam[K, P](implicit namedParamConverter: NamedParamConverter[K], swaggerConverter: SwaggerParamConverter[NamedParam[P]]) = at[FieldType[K, P]] { param =>
+    val namedParam: NamedParam[P] = namedParamConverter.asNamedParam(param)
+    swaggerConverter(namedParam) }
 }

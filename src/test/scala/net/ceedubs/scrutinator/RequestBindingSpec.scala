@@ -27,7 +27,7 @@ class RequestBindingSpec extends Spec with Mockito {
         ("second" ->> headerParam[String]().check("oops!")(_ => true)) ::
         HNil
 
-      val results = RequestBinding.bindFromRequest(fields, mockRequest)
+      val results = RequestBinding.bindFromRequest(fields).run(mockRequest)
 
       typed[Errors \/ (Option[String], Option[String])](results.map(params =>
         (params.get("first"), params.get("second"))))
@@ -51,7 +51,7 @@ class RequestBindingSpec extends Spec with Mockito {
           ("second" ->> headerParam[String]().check("second failed!")(_ => false)) ::
           HNil
 
-        val results = RequestBinding.bindFromRequest(fields, mockRequest)
+        val results = RequestBinding.bindFromRequest(fields).run(mockRequest)
 
         typed[Errors \/ (Option[String], Option[String])](results.map(params =>
           (params.get("first"), params.get("second"))))
@@ -70,7 +70,7 @@ class RequestBindingSpec extends Spec with Mockito {
         ("second" ->> queryParam[String]()) ::
         HNil
 
-      RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
+      RequestBinding.bindFromRequest(fields).run(mockRequest) must beLike {
         case \/-(params) =>
           typed[Option[String]](params.get("first")) // compiles
           typed[Option[String]](params.get("second")) // compiles
@@ -89,7 +89,7 @@ class RequestBindingSpec extends Spec with Mockito {
         HNil
 
       val expected = first.filterNot(_.isEmpty).toRightDisjunction(NonEmptyList(ValidationError("Hey! 'first' is a required field!", FieldName("first"))))
-      expected ==== RequestBinding.bindFromRequest(fields, mockRequest).map(_.get("first"))
+      expected ==== RequestBinding.bindFromRequest(fields).run(mockRequest).map(_.get("first"))
 
     }
 
@@ -103,7 +103,7 @@ class RequestBindingSpec extends Spec with Mockito {
         HNil
 
       val expected  = \/.right[Errors, String](first.filterNot(_.isEmpty).getOrElse("<none provided>"))
-      val result = RequestBinding.bindFromRequest(fields, mockRequest).map(_.get("first"))
+      val result = RequestBinding.bindFromRequest(fields).run(mockRequest).map(_.get("first"))
       typed[Errors \/ String](result)
       expected ==== result
     }

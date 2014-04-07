@@ -39,7 +39,7 @@ class NumberReadersSpec extends Spec with Mockito {
         ("float" ->> queryParam[Float]()) ::
         ("short" ->> queryParam[Short]()) ::
         HNil
-      RequestBinding.bindFromRequest(fields, mockRequest) must beLike {
+      RequestBinding.bindFromRequest(fields).run(mockRequest) must beLike {
         case \/-(params) =>
           int ==== params.get("int")
           long ==== params.get("long")
@@ -70,7 +70,7 @@ class NumberReadersSpec extends Spec with Mockito {
           ("short" ->> queryParam[Short]()) ::
           HNil
 
-        val result = RequestBinding.bindFromRequest(fields, mockRequest)
+        val result = RequestBinding.bindFromRequest(fields).run(mockRequest)
 
         val tupledResult = result.map(params => (
           params.get("int"),

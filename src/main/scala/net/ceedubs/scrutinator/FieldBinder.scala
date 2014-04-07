@@ -22,6 +22,8 @@ object FieldBinder extends RequestFieldBinders {
     type R = R0
   }
 
+  def apply[L <: HList, I](implicit fieldBinder: FieldBinder[L, I]): Aux[L, I, fieldBinder.R] = fieldBinder
+
 }
 
 object tuplesToFields extends Poly1 {

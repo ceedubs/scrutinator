@@ -41,7 +41,7 @@ class JsonBodyReaderSpec extends Spec {
         ("boolean" -> boolean)
       val request = mockRequest(jsonBody = Some(compact(render(body))))
 
-      val results = RequestBinding.bindFromRequest(fields, request).map { params =>
+      val results = RequestBinding.bindFromRequest(fields).run(request).map { params =>
         val body = params.get("body")
         (body.get("string"), body.get("int"), body.get("long"), body.get("double"), body.get("float"), body.get("short"), body.get("boolean"))
       }
@@ -59,7 +59,7 @@ class JsonBodyReaderSpec extends Spec {
       val body = ("string1" -> int) ~ ("string2" -> boolean)
       val request = mockRequest(jsonBody = Some(compact(render(body))))
 
-      RequestBinding.bindFromRequest(fields, request) must beLike {
+      RequestBinding.bindFromRequest(fields).run(request) must beLike {
         case -\/(errors) => errors ==== NonEmptyList(
           ValidationError("String 1 must be a valid string", FieldName("string1")),
           ValidationError("string2 must be a valid string", FieldName("string2")))

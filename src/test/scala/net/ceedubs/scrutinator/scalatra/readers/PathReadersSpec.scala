@@ -46,12 +46,15 @@ class PathReadersSpec extends Spec with Mockito with MutableScalatraSpec {
 
 object PathReadersSpec extends SpecHelpers {
   class PathReadersSpecServlet extends SpecServlet {
+    import RequestBinding._
+
     val fields1 =
       ("int" ->> pathParam[Int]().required(_ => "int path param is required!")) ::
       ("string" ->> pathParam[String]().required(_ => "string path param is required!")) ::
       HNil
+    val binder1 = bindFromRequest(fields1)
     get("/test1/:int/:string") {
-      RequestBinding.bindFromRequest(fields1, request).map { params =>
+      binder1.run(request).map { params =>
         typed[Int](params.get("int"))
         typed[String](params.get("string"))
         s"${params.get("int")}-${params.get("string")}"
@@ -66,8 +69,9 @@ object PathReadersSpec extends SpecHelpers {
         .check("string should fail")(_ => false)
         .required(_ => "string path param is required!")) ::
       HNil
+    val binder2 = bindFromRequest(fields2)
     get("/test2/:int/:string") {
-      RequestBinding.bindFromRequest(fields2, request).map { params =>
+      binder2.run(request).map { params =>
         typed[Int](params.get("int"))
         typed[String](params.get("string"))
         s"${params.get("int")}-${params.get("string")}"
