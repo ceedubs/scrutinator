@@ -11,8 +11,8 @@ trait PathReaders {
   import PathReaders._
   import Param._
 
-  implicit def pathNamedParamReader[A](implicit reader: ParamReader[ErrorsOrMaybe, (FieldKey, PathParams), A]): ParamReader[ErrorsOrMaybe, (NamedParam[PathParam[A]], Request), A] = {
-    ParamReader[ErrorsOrMaybe, (NamedParam[PathParam[A]], Request), A](Function.tupled { (namedParam, request) =>
+  implicit def pathNamedParamReader[A](implicit reader: ParamReader[ValidatedOption, (FieldKey, PathParams), A]): ParamReader[ValidatedOption, (NamedParam[PathParam[A]], Request), A] = {
+    ParamReader[ValidatedOption, (NamedParam[PathParam[A]], Request), A](Function.tupled { (namedParam, request) =>
       val fieldKey = FieldKey(name = namedParam.name, prettyName = namedParam.param.prettyName) 
       val multiParams: Option[Map[String, Seq[String]]] = request.get(org.scalatra.MultiParamsKey).flatMap(x =>
         if (x.isInstanceOf[MultiParams]) Some(x.asInstanceOf[MultiParams]) else None)
@@ -31,8 +31,8 @@ trait PathReaders {
     })
   }
 
-  implicit val pathStringFieldReader: ParamReader[ErrorsOrMaybe, (FieldKey, PathParams), String] = {
-    val kleisli = Kleisli[ErrorsOrMaybe, (FieldKey, PathParams), String](Function.tupled(
+  implicit val pathStringFieldReader: ParamReader[ValidatedOption, (FieldKey, PathParams), String] = {
+    val kleisli = Kleisli[ValidatedOption, (FieldKey, PathParams), String](Function.tupled(
       (fieldKey, pathParams) =>
         Validation.success(pathParams.get(fieldKey.name).filterNot(_.isEmpty))))
     ParamReader.fromKleisli(kleisli)

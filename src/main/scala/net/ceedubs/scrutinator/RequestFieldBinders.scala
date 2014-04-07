@@ -9,7 +9,7 @@ trait RequestFieldBinders {
 }
 
 object bindParamFromRequest extends Poly1 {
-  implicit def atField[K, A, O](implicit npc: NamedParamConverter[K], reader: ParamReader[ErrorsOr, (NamedParam[A], Request), O]) = at[FieldType[K, A]] { param =>
+  implicit def atField[K, A, O](implicit npc: NamedParamConverter[K], reader: ParamReader[Validated, (NamedParam[A], Request), O]) = at[FieldType[K, A]] { param =>
     val namedParam: NamedParam[A] = npc.asNamedParam(param)
     reader.reader.local((request: Request) => (namedParam, request))
   }

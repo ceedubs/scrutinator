@@ -23,8 +23,8 @@ object ParamReader extends QueryStringReaders with OptionalParamReaders
     val reader: Kleisli[M, I, O] = k
   }
 
-  def andThenCheck[I, A, B](r: ParamReader[ErrorsOrMaybe, (FieldKey, I), A])(f: Function2[FieldKey, A, ValidationNel[String, B]]): ParamReader[ErrorsOrMaybe, (FieldKey, I), B] = {
-    ParamReader[ErrorsOrMaybe, (FieldKey, I), B](Function.tupled { (fieldKey, input) =>
+  def andThenCheck[I, A, B](r: ParamReader[ValidatedOption, (FieldKey, I), A])(f: Function2[FieldKey, A, ValidationNel[String, B]]): ParamReader[ValidatedOption, (FieldKey, I), B] = {
+    ParamReader[ValidatedOption, (FieldKey, I), B](Function.tupled { (fieldKey, input) =>
       r.reader((fieldKey, input)).flatMap { maybeA =>
         std.option.cata(maybeA)(a => f(fieldKey, a)
           .leftMap(_.map(errorMsg => ValidationError(errorMsg, FieldName(fieldKey.name))))

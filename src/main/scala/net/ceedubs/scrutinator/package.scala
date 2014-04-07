@@ -7,9 +7,9 @@ import org.scalatra.servlet.RichRequest
 package object scrutinator {
   type Request = javax.servlet.http.HttpServletRequest
   type Errors = NonEmptyList[ValidationError]
-  type ErrorsOr[+A] = ValidationNel[ValidationError, A]
-  type ErrorsOrMaybe[+A] = ValidationNel[ValidationError, Option[A]]
-  type MonadicErrorsOr[+A] = Errors \/ A
+  type Validated[+A] = ValidationNel[ValidationError, A]
+  type ValidatedOption[+A] = ValidationNel[ValidationError, Option[A]]
+  type ErrorsOr[+A] = Errors \/ A
 
   implicit def reqToRichReq: Request => RichRequest = RichRequest.apply
 }

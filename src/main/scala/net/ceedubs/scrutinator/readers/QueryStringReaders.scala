@@ -8,8 +8,8 @@ trait QueryStringReaders {
   import QueryStringReaders._
   import Param._
 
-  implicit def queryStringNamedParamReader[A](implicit reader: ParamReader[ErrorsOrMaybe, (FieldKey, QueryStringParams), A]): ParamReader[ErrorsOrMaybe, (NamedParam[QueryParam[A]], Request), A] = {
-    ParamReader[ErrorsOrMaybe, (NamedParam[QueryParam[A]], Request), A](Function.tupled { (namedParam, request) =>
+  implicit def queryStringNamedParamReader[A](implicit reader: ParamReader[ValidatedOption, (FieldKey, QueryStringParams), A]): ParamReader[ValidatedOption, (NamedParam[QueryParam[A]], Request), A] = {
+    ParamReader[ValidatedOption, (NamedParam[QueryParam[A]], Request), A](Function.tupled { (namedParam, request) =>
       val fieldKey = FieldKey(name = namedParam.name, prettyName = namedParam.param.prettyName) 
       val queryParams = QueryStringParams(request.parameters)
       reader.reader((fieldKey, queryParams)).flatMap { maybeA =>
@@ -22,8 +22,8 @@ trait QueryStringReaders {
     })
   }
 
-  implicit val queryStringStringFieldReader: ParamReader[ErrorsOrMaybe, (FieldKey, QueryStringParams), String] = {
-    val kleisli = Kleisli[ErrorsOrMaybe, (FieldKey, QueryStringParams), String](Function.tupled(
+  implicit val queryStringStringFieldReader: ParamReader[ValidatedOption, (FieldKey, QueryStringParams), String] = {
+    val kleisli = Kleisli[ValidatedOption, (FieldKey, QueryStringParams), String](Function.tupled(
       (fieldKey, queryParams) =>
         Validation.success(queryParams.get(fieldKey.name).filterNot(_.isEmpty))))
     ParamReader.fromKleisli(kleisli)

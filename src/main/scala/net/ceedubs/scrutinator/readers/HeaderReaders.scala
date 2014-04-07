@@ -8,8 +8,8 @@ trait HeaderReaders {
   import HeaderReaders._
   import Param._
 
-  implicit def headerNamedParamReader[A](implicit reader: ParamReader[ErrorsOrMaybe, (FieldKey, HeaderParams), A]): ParamReader[ErrorsOrMaybe, (NamedParam[HeaderParam[A]], Request), A] = {
-    ParamReader[ErrorsOrMaybe, (NamedParam[HeaderParam[A]], Request), A](Function.tupled { (namedParam, request) =>
+  implicit def headerNamedParamReader[A](implicit reader: ParamReader[ValidatedOption, (FieldKey, HeaderParams), A]): ParamReader[ValidatedOption, (NamedParam[HeaderParam[A]], Request), A] = {
+    ParamReader[ValidatedOption, (NamedParam[HeaderParam[A]], Request), A](Function.tupled { (namedParam, request) =>
       val fieldKey = FieldKey(name = namedParam.name, prettyName = namedParam.param.prettyName) 
       val headers = HeaderParams(request.headers)
       reader.reader((fieldKey, headers)).flatMap { maybeA =>
@@ -22,8 +22,8 @@ trait HeaderReaders {
     })
   }
 
-  implicit val headerStringFieldReader: ParamReader[ErrorsOrMaybe, (FieldKey, HeaderParams), String] = {
-    val kleisli = Kleisli[ErrorsOrMaybe, (FieldKey, HeaderParams), String](Function.tupled(
+  implicit val headerStringFieldReader: ParamReader[ValidatedOption, (FieldKey, HeaderParams), String] = {
+    val kleisli = Kleisli[ValidatedOption, (FieldKey, HeaderParams), String](Function.tupled(
       (fieldKey, headerParams) =>
         Validation.success(headerParams.get(fieldKey.name).filterNot(_.isEmpty))))
     ParamReader.fromKleisli(kleisli)
