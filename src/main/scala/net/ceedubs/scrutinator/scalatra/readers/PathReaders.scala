@@ -3,7 +3,9 @@ package scalatra
 package readers
 
 import net.ceedubs.scrutinator.readers._
-import scalaz._
+import scalaz.{ @@ => _, _ }
+import shapeless.tag
+import shapeless.tag._
 import org.scalatra.validation.{ FieldName, ValidationError }
 import org.scalatra.MultiParams
 
@@ -47,6 +49,7 @@ object PathReaders extends PathReaders {
   type PathParams = Map[String, String] @@ Path
 
   object PathParams {
-    def apply(params: Map[String, String]): PathParams = Tag[Map[String, String], Path](params)
+    val tagger: Tagger[Path] = tag[Path]
+    def apply(params: Map[String, String]): PathParams = tagger[Map[String, String]](params)
   }
 }

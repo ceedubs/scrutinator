@@ -1,19 +1,21 @@
 package net.ceedubs.scrutinator
 package swagger
 
-import scalaz._
+import scalaz.{ @@ => _, _ }
+import shapeless.tag._
 import shapeless._
 
 sealed trait SwaggerSpec
 
 object SwaggerSpec {
-  def apply[A](a: A): A @@ SwaggerSpec = Tag[A, SwaggerSpec](a)
+  val tagger: Tagger[SwaggerSpec] = tag[SwaggerSpec]
+  def apply[A](a: A): A @@ SwaggerSpec = tagger[A](a)
 }
 
 object SwaggerShow {
   sealed trait SwaggerSpec
 
-  def show[A](s: Show[A]): SwaggerShow[A] = Tag.subst(s)
+  def show[A](s: Show[A]): SwaggerShow[A] = s.asInstanceOf[SwaggerShow[A]]
 }
 
 trait SwaggerShowInstances {

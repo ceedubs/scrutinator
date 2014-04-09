@@ -1,7 +1,8 @@
 package net.ceedubs
 
-import scalaz._
+import scalaz.{ @@ => _, _}
 import shapeless._
+import shapeless.tag.@@
 import org.scalatra.validation.ValidationError
 import org.scalatra.servlet.RichRequest
 import scrutinator.ValueSource._

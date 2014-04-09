@@ -2,9 +2,11 @@ package net.ceedubs.scrutinator
 package swagger
 
 import net.ceedubs.scrutinator.json4s.readers._
-import scalaz._
+import scalaz.{ @@ => _, _ }
 import scalaz.Leibniz._
 import shapeless._
+import shapeless.tag
+import shapeless.tag._
 import shapeless.record._
 import shapeless.ops.hlist.{ Mapper, ToList }
 import shapeless.contrib.scalaz._
@@ -13,7 +15,8 @@ import org.scalatra.swagger.{ AllowableValues, DataType, Model, ModelProperty }
 sealed trait SwaggerModelId
 
 object ModelId {
-  def apply(id: String): ModelId = Tag[String, SwaggerModelId](id)
+  val tagger: Tagger[SwaggerModelId] = tag[SwaggerModelId]
+  def apply(id: String): ModelId = tagger[String](id)
 }
 
 trait SwaggerModelConverter[A] {

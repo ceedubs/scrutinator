@@ -1,7 +1,9 @@
 package net.ceedubs.scrutinator
 package readers
 
-import scalaz._
+import scalaz.{ @@ => _, _ }
+import shapeless.tag
+import shapeless.tag._
 import org.scalatra.validation.{ FieldName, ValidationError }
 
 trait QueryStringReaders {
@@ -38,6 +40,7 @@ object QueryStringReaders extends QueryStringReaders {
   type QueryStringParams = Map[String, String] @@ QueryString
 
   object QueryStringParams {
-    def apply(params: Map[String, String]): QueryStringParams = Tag[Map[String, String], QueryString](params)
+    val tagger: Tagger[QueryString] = tag[QueryString]
+    def apply(params: Map[String, String]): QueryStringParams = tagger[Map[String, String]](params)
   }
 }
