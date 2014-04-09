@@ -17,51 +17,115 @@ class JsonBodyReaderSpec extends Spec {
   import ValueSource._
 
  "A Json body reader" should {
-    "successfully bind valid params" ! prop { (string: Option[String], int: Option[Int], long: Option[Long], double: Option[Double], float: Option[Float], short: Option[Short], boolean: Option[Boolean]) =>
+    "successfully bind valid params" ! prop { (
+        string: Option[String], stringField: Field[String],
+        boolean: Option[Boolean], booleanField: Field[Boolean],
+        stringWithDefault: Option[String], stringWithDefaultField: ParamWithDefault[String],
+        requiredBoolean: Boolean, requiredBooleanField: RequiredParam[Field[Boolean]]) =>
+
       val fields =
         ("body" ->> JsonBody(Fields(
-          ("string" ->> Field[String]()) ::
-          ("int" ->> Field[Int]()) ::
-          ("long" ->> Field[Long]()) ::
-          ("double" ->> Field[Double]()) ::
-          ("float" ->> Field[Float]()) ::
-          ("short" ->> Field[Short]()) ::
-          ("boolean" ->> Field[Boolean]()) ::
-          HNil))
+          ("string" ->> stringField) ::
+          ("boolean" ->> booleanField) ::
+          ("stringWithDefault" ->> stringWithDefaultField) ::
+          ("requiredBoolean" ->> requiredBooleanField) :: HNil))
         ) :: HNil
 
       val body =
         ("string" -> string) ~
-        ("int" -> int) ~
-        ("long" -> long) ~
-        ("double" -> double) ~
-        ("float" -> float) ~
-        ("short" -> short.map(_.toInt)) ~
-        ("boolean" -> boolean)
+        ("boolean" -> boolean) ~
+        ("stringWithDefault" -> stringWithDefault) ~
+        ("requiredBoolean" -> requiredBoolean)
       val request = mockRequest(jsonBody = Some(compact(render(body))))
 
       val results = RequestBinding.bindFromRequest(fields).run(request).map { params =>
         val body = params.get("body")
-        (body.get("string"), body.get("int"), body.get("long"), body.get("double"), body.get("float"), body.get("short"), body.get("boolean"))
+        (body.get("string"), body.get("boolean"), body.get("stringWithDefault"), body.get("requiredBoolean"))
       }
-      \/.right[Errors, (Option[String], Option[Int], Option[Long], Option[Double], Option[Float], Option[Short], Option[Boolean])]((string, int, long, double, float, short, boolean)) ==== results
+      \/.right[Errors, (Option[String], Option[Boolean], String, Boolean)]((
+        string,
+        boolean,
+        stringWithDefault.getOrElse(stringWithDefaultField.default),
+        requiredBoolean)) ==== results
     }
 
-    "return validation errors for invalid params" ! prop { (int: Int, boolean: Boolean) =>
+    "successfully bind numbers" ! prop { (
+        int: Option[Int], intField: Field[Int],
+        long: Option[Long],
+        double: Option[Double],
+        float: Option[Float],
+        short: Option[Short]) =>
+
       val fields =
         ("body" ->> JsonBody(Fields(
-          ("string1" ->> Field[String](prettyName = Some("String 1"))) ::
-          ("string2" ->> Field[String]()) ::
+          ("int" ->> intField) ::
+          ("long" ->> Field[Long]()) ::
+          ("double" ->> Field[Double]()) ::
+          ("float" ->> Field[Float]()) ::
+          ("short" ->> Field[Short]()) :: HNil))
+        ) :: HNil
+
+      val body =
+        ("int" -> int) ~
+        ("long" -> long) ~
+        ("double" -> double) ~
+        ("float" -> float) ~
+        ("short" -> short.map(_.toInt))
+      val request = mockRequest(jsonBody = Some(compact(render(body))))
+
+      val results = RequestBinding.bindFromRequest(fields).run(request).map { params =>
+        val body = params.get("body")
+        (body.get("int"), body.get("long"), body.get("double"), body.get("float"), body.get("short"))
+      }
+      \/.right[Errors, (Option[Int], Option[Long], Option[Double], Option[Float], Option[Short])]((int, long, double, float, short)) ==== results
+    }
+
+    "successfully bind collections" ! prop { (stringSet: Option[Set[String]], doubleList: Option[List[Double]]) =>
+      val fields =
+        ("body" ->> JsonBody(Fields(
+          ("stringSet" ->> Field[Set[String]]()) ::
+          ("doubleList" ->> Field[List[Double]]()) :: HNil))
+        ) :: HNil
+      val body =
+        ("stringSet" -> stringSet) ~
+        ("doubleList" -> doubleList)
+      val request = mockRequest(jsonBody = Some(compact(render(body))))
+
+      val results = RequestBinding.bindFromRequest(fields).run(request).map { params =>
+        val body = params.get("body")
+        (body.get("stringSet"), body.get("doubleList"))
+      }
+      \/.right[Errors, (Option[Set[String]], Option[List[Double]])]((stringSet, doubleList)) ==== results
+    }
+
+    "return validation errors for invalid params" ! prop { (
+        stringField: Field[String], int: Int,
+        doubleField: Field[Double], string: String,
+        intSetField: Field[Set[Int]],
+        booleanListField: Field[List[Boolean]], intNel: NonEmptyList[Int]) =>
+
+      val fields =
+        ("body" ->> JsonBody(Fields(
+          ("string" ->> stringField) ::
+          ("double" ->> doubleField) ::
+          ("intSet" ->> intSetField) ::
+          ("booleanList" ->> booleanListField) ::
           HNil))
         ) :: HNil
 
-      val body = ("string1" -> int) ~ ("string2" -> boolean)
+      val body =
+        ("string" -> int) ~
+        ("double" -> string) ~
+        ("intSet" -> int) ~
+        ("booleanList" -> intNel.list)
       val request = mockRequest(jsonBody = Some(compact(render(body))))
 
       RequestBinding.bindFromRequest(fields).run(request) must beLike {
         case -\/(errors) => errors ==== NonEmptyList(
-          ValidationError("String 1 must be a valid string", FieldName("string1")),
-          ValidationError("string2 must be a valid string", FieldName("string2")))
+          ValidationError(s"${stringField.prettyName.getOrElse("string")} does not have the proper format", FieldName("string")),
+          ValidationError(s"${doubleField.prettyName.getOrElse("double")} does not have the proper format", FieldName("double")),
+          ValidationError(s"${intSetField.prettyName.getOrElse("intSet")} does not have the proper format", FieldName("intSet")),
+          ValidationError(s"${booleanListField.prettyName.getOrElse("booleanList")} does not have the proper format", FieldName("booleanList")))
       }
     }
 

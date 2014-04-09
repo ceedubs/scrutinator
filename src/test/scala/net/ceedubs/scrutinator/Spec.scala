@@ -1,5 +1,6 @@
 package net.ceedubs.scrutinator
 
+import scalaz._
 import org.specs2.mutable._
 import org.specs2.ScalaCheck
 import org.scalacheck._
@@ -85,4 +86,12 @@ trait ScrutinatorArb {
   }
 
   implicit def arbParamWithDefault[A : Arbitrary]: Arbitrary[ParamWithDefault[A]] = Arbitrary(genParamWithDefault[A])
+
+  // there is a better implementation in scalaz-scalacheck-binding,
+  // but we have a Scalacheck version mismatch :\
+  implicit def NonEmptyListArbitrary[A](implicit arbA: Arbitrary[A]): Arbitrary[NonEmptyList[A]] = 
+    Arbitrary(for {
+      a <- arbA.arbitrary
+      aList <- arbitrary[List[A]]
+    } yield NonEmptyList.nel(a, aList))
 }

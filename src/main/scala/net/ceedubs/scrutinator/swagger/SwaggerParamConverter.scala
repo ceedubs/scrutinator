@@ -28,7 +28,8 @@ object SwaggerDataTypeConverter {
   implicit val floatSwaggerDataConverter: SwaggerDataTypeConverter[Float] = apply[Float](DataType.Float)
   implicit val doubleSwaggerDataConverter: SwaggerDataTypeConverter[Double] = apply[Double](DataType.Double)
   implicit val dateSwaggerDataConverter: SwaggerDataTypeConverter[java.util.Date] = apply[java.util.Date](DataType.Date)
-
+  implicit def listSwaggerDataConverter[A](implicit aConverter: SwaggerDataTypeConverter[A]): SwaggerDataTypeConverter[List[A]] = apply[List[A]](DataType.GenList(aConverter.dataType))
+  implicit def setSwaggerDataConverter[A](implicit aConverter: SwaggerDataTypeConverter[A]): SwaggerDataTypeConverter[Set[A]] = apply[Set[A]](DataType.GenSet(aConverter.dataType))
 }
 
 trait SwaggerSourceConverter[S <: ValueSource] {
