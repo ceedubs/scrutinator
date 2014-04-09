@@ -23,8 +23,8 @@ class RequestBindingSpec extends Spec with Mockito {
       ).asJava
       mockRequest.getHeader("second") returns second.orNull
       val fields =
-        ("first" ->> queryParam[String]()) ::
-        ("second" ->> headerParam[String]().check("oops!")(_ => true)) ::
+        ("first" ->> QueryParam(Param[String]())) ::
+        ("second" ->> HeaderParam(Param[String]().check("oops!")(_ => true))) ::
         HNil
 
       val results = RequestBinding.bindFromRequest(fields).run(mockRequest)
@@ -47,8 +47,8 @@ class RequestBindingSpec extends Spec with Mockito {
         ).asJava
         mockRequest.getHeader("second") returns second
         val fields =
-          ("first" ->> queryParam[String]().check("first failed!")(_ => false)) ::
-          ("second" ->> headerParam[String]().check("second failed!")(_ => false)) ::
+          ("first" ->> QueryParam(Param[String]().check("first failed!")(_ => false))) ::
+          ("second" ->> HeaderParam(Param[String]().check("second failed!")(_ => false))) ::
           HNil
 
         val results = RequestBinding.bindFromRequest(fields).run(mockRequest)
@@ -66,8 +66,8 @@ class RequestBindingSpec extends Spec with Mockito {
       val mockRequest = mock[HttpServletRequest]
       mockRequest.getParameterMap returns Map.empty[String, Array[String]].asJava
       val fields =
-        ("first" ->> queryParam[String]()) ::
-        ("second" ->> queryParam[String]()) ::
+        ("first" ->> QueryParam(Param[String]())) ::
+        ("second" ->> QueryParam(Param[String]())) ::
         HNil
 
       RequestBinding.bindFromRequest(fields).run(mockRequest) must beLike {
@@ -85,7 +85,7 @@ class RequestBindingSpec extends Spec with Mockito {
         "first" -> first.map(s => Array(s)).getOrElse(Array())
       ).asJava
       val fields =
-        ("first" ->> queryParam[String]().required(p => s"Hey! '${p.name}' is a required field!")) ::
+        ("first" ->> QueryParam(Param[String]().required(p => s"Hey! '${p.name}' is a required field!"))) ::
         HNil
 
       val expected = first.filterNot(_.isEmpty).toRightDisjunction(NonEmptyList(ValidationError("Hey! 'first' is a required field!", FieldName("first"))))
@@ -99,7 +99,7 @@ class RequestBindingSpec extends Spec with Mockito {
         "first" -> first.map(s => Array(s)).getOrElse(Array.empty)
       ).asJava
       val fields =
-        ("first" ->> queryParam[String]().withDefault("<none provided>")) ::
+        ("first" ->> QueryParam(Param[String]().withDefault("<none provided>"))) ::
         HNil
 
       val expected  = \/.right[Errors, String](first.filterNot(_.isEmpty).getOrElse("<none provided>"))

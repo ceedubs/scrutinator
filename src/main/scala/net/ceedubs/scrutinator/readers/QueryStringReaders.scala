@@ -8,8 +8,8 @@ trait QueryStringReaders {
   import QueryStringReaders._
   import Param._
 
-  implicit def queryStringNamedParamReader[A](implicit reader: ParamReader[ValidatedOption, (FieldKey, QueryStringParams), A]): ParamReader[ValidatedOption, (NamedParam[QueryParam[A]], Request), A] = {
-    ParamReader[ValidatedOption, (NamedParam[QueryParam[A]], Request), A](Function.tupled { (namedParam, request) =>
+  implicit def queryStringNamedParamReader[A](implicit reader: ParamReader[ValidatedOption, (FieldKey, QueryStringParams), A]): ParamReader[ValidatedOption, (NamedParam[QueryParam[Param[A]]], Request), A] = {
+    ParamReader[ValidatedOption, (NamedParam[QueryParam[Param[A]]], Request), A](Function.tupled { (namedParam, request) =>
       val fieldKey = FieldKey(name = namedParam.name, prettyName = namedParam.param.prettyName) 
       val queryParams = QueryStringParams(request.parameters)
       reader.reader((fieldKey, queryParams)).flatMap { maybeA =>

@@ -2,7 +2,6 @@ package net.ceedubs.scrutinator
 package swagger
 
 import net.ceedubs.scrutinator.json4s.readers._
-import JsonParam._
 import scalaz._
 import scalaz.Leibniz._
 import shapeless._
@@ -21,7 +20,7 @@ trait SwaggerModelConverter[A] {
   def apply(a: A): ModelState[Model]
 }
 
-object SwaggerModelConverter extends JsonBodyModelConverters {
+object SwaggerModelConverter extends SwaggerModelConverters {
   def apply[A](f: A => ModelState[Model]): SwaggerModelConverter[A] = new SwaggerModelConverter[A] {
     def apply(a: A) = f(a)
   }
@@ -31,7 +30,7 @@ trait SwaggerModelPropertyConverter[A] {
   def apply(a: A): ModelState[ModelProperty]
 }
 
-object SwaggerModelPropertyConverter extends JsonFieldModelPropertyConverters {
+object SwaggerModelPropertyConverter extends FieldModelPropertyConverters {
   def apply[A](f: A => ModelState[ModelProperty]): SwaggerModelPropertyConverter[A] = new SwaggerModelPropertyConverter[A] {
     def apply(a: A) = f(a)
   }
@@ -45,15 +44,14 @@ object toSwaggerModelProperty extends Poly1 {
     }
 }
 
-trait JsonBodyModelConverters {
-  implicit def namedJsonModelConverter[F[_], L <: HList, O <: HList](implicit traverser: TraverserAux[L, toSwaggerModelProperty.type, F, O], toList: ToList[O, NamedParam[ModelProperty]], ev: F[O] === ModelState[O]): SwaggerModelConverter[NamedParam[JsonModelParam[L]]] =
-    SwaggerModelConverter[NamedParam[JsonModelParam[L]]](namedParam =>
+trait SwaggerModelConverters {
+  implicit def swaggerModelConverter[F[_], L <: HList, O <: HList](implicit traverser: TraverserAux[L, toSwaggerModelProperty.type, F, O], toList: ToList[O, NamedParam[ModelProperty]], ev: F[O] === ModelState[O]): SwaggerModelConverter[SwaggerModel[L]] = SwaggerModelConverter[SwaggerModel[L]](swaggerModel =>
       ModelState[Model] { s =>
-        val modelId = ModelId(namedParam.param.modelId)
+        val modelId = ModelId(swaggerModel.modelId)
         s.get(modelId)
         .map(m => s -> m)
         .getOrElse {
-          val (s2, fields) = ev(traverser(namedParam.param.fields)).apply(s)
+          val (s2, fields) = ev(traverser(swaggerModel.fields)).apply(s)
           val model = Model(
             id = modelId,
             name = modelId,
@@ -64,17 +62,17 @@ trait JsonBodyModelConverters {
         }})
 }
 
-trait JsonFieldModelPropertyConverters {
-  implicit def jsonFieldModelPropertyConverter[A](implicit dataTypeConverter: SwaggerDataTypeConverter[A]): SwaggerModelPropertyConverter[NamedParam[JsonFieldParam[A]]] =
-    SwaggerModelPropertyConverter[NamedParam[JsonFieldParam[A]]](namedParam =>
+trait FieldModelPropertyConverters {
+  implicit def fieldModelPropertyConverter[A](implicit dataTypeConverter: SwaggerDataTypeConverter[A]): SwaggerModelPropertyConverter[NamedParam[Param[A]]] =
+    SwaggerModelPropertyConverter[NamedParam[Param[A]]](namedParam =>
       State.state(
         ModelProperty(
           `type` = dataTypeConverter.dataType,
           required = false,
           description = None /* TODO */)))
 
-  implicit def requiredJsonFieldModelPropertyConverter[A](implicit converter: SwaggerModelPropertyConverter[NamedParam[JsonFieldParam[A]]]): SwaggerModelPropertyConverter[NamedParam[RequiredParam[JsonFieldParam[A]]]] =
-    SwaggerModelPropertyConverter[NamedParam[RequiredParam[JsonFieldParam[A]]]] { namedParam =>
+  implicit def requiredFieldModelPropertyConverter[A](implicit converter: SwaggerModelPropertyConverter[NamedParam[Param[A]]]): SwaggerModelPropertyConverter[NamedParam[RequiredParam[Param[A]]]] =
+    SwaggerModelPropertyConverter[NamedParam[RequiredParam[Param[A]]]] { namedParam =>
       val nestedNamedParam = NamedParam(namedParam.name, namedParam.param.param)
       converter(nestedNamedParam).map(_.copy(required = true))
     }

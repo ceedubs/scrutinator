@@ -3,32 +3,54 @@ package net.ceedubs.scrutinator
 import scalaz._
 import shapeless._
 import org.scalatra.validation.{ FieldName, ValidationError }
+import ValueSource._
 
 /**
-  A: the value type
-  S: source (QueryString, Headers, etc)
-*/
-case class Param[A, S <: ValueSource](
+ * A parameter of type A.
+ * For example, a Param[Int] will result in an Int after binding.
+ * That Int may be wrapped in an Option, depending on whether this
+ * Param is wrapped in a RequiredParam, ParamWithDefault, etc.
+ */
+final case class Param[A](
   description: Option[String] = Param.Defaults.description,
   notes: Option[String] = Param.Defaults.notes,
   prettyName: Option[String] = Param.Defaults.prettyName,
   validations: Param.ParamValidations[A] = Param.Defaults.validations[A]) {
 
-  type Self = Param[A, S]
-
-  def check(errorMsg: => String)(f: A => Boolean): Self = {
+  def check(errorMsg: => String)(f: A => Boolean): Param[A] = {
     val newValidation = (fieldKey: FieldKey, a: A) => if (f(a)) Nil else errorMsg :: Nil
     copy(validations = newValidation :: validations)
   }
 
-  def required(errorMsg: NamedParam[Self] => String): RequiredParam[Self] = RequiredParam(this, errorMsg)
+  def required(errorMsg: NamedParam[Param[A]] => String): RequiredParam[Param[A]] = RequiredParam(this, errorMsg)
 
-  def withDefault(default: A): ParamWithDefault[A, S] = ParamWithDefault(this, default)
+  def withDefault(default: A): ParamWithDefault[A] = ParamWithDefault(this, default)
 
 }
 
+object ParamFromSource {
+  def apply[A, S <: ValueSource](param: A): ParamFromSource[A, S] = shapeless.tag[S].apply[A](param)
+}
+
+object QueryParam {
+  def apply[A](param: A): QueryParam[A] = ParamFromSource[A, QueryString](param)
+}
+
+object HeaderParam {
+  def apply[A](param: A): HeaderParam[A] = ParamFromSource[A, Headers](param)
+}
+
+object PathParam {
+  def apply[A](param: A): PathParam[A] = ParamFromSource[A, Path](param)
+}
+
+final case class Fields[L <: HList](fields: L)
+
+object JsonBody {
+  def apply[A](param: A): JsonBody[A] = ParamFromSource[A, Json](param)
+}
+
 object Param {
-  import ValueSource._
 
   type ParamValidations[A] = List[Function2[FieldKey, A, List[String]]]
 
@@ -37,37 +59,6 @@ object Param {
       val notes: Option[String] = None
       val prettyName: Option[String] = None
       def validations[A]: ParamValidations[A] = Nil
-  }
-
-  type QueryParam[A] = Param[A, QueryString]
-  type HeaderParam[A] = Param[A, Headers]
-  type PathParam[A] = Param[A, Path]
-
-  def queryParam[A](
-      description: Option[String] = Defaults.description,
-      notes: Option[String] = Defaults.notes,
-      prettyName: Option[String] = Defaults.prettyName,
-      validations: ParamValidations[A] = Defaults.validations[A]): QueryParam[A] = {
-
-    Param[A, QueryString](description, notes, prettyName, validations)
-  }
-
-  def headerParam[A](
-      description: Option[String] = Defaults.description,
-      notes: Option[String] = Defaults.notes,
-      prettyName: Option[String] = Defaults.prettyName,
-      validations: ParamValidations[A] = Defaults.validations[A]): HeaderParam[A] = {
-
-    Param[A, Headers](description, notes, prettyName, validations)
-  }
-
-  def pathParam[A](
-      description: Option[String] = Defaults.description,
-      notes: Option[String] = Defaults.notes,
-      prettyName: Option[String] = Defaults.prettyName,
-      validations: ParamValidations[A] = Defaults.validations[A]): PathParam[A] = {
-
-    Param[A, Path](description, notes, prettyName, validations)
   }
 
 }
@@ -85,15 +76,15 @@ object ValueSource {
   sealed trait Json extends ValueSource
 }
 
-case class RequiredParam[A](
+final case class RequiredParam[A](
   param: A,
   errorMsg: NamedParam[A] => String)
 
-case class ParamWithDefault[A, S <: ValueSource](
-  param: Param[A, S],
+final case class ParamWithDefault[A](
+  param: Param[A],
   default: A)
 
-case class NamedParam[A](name: String, param: A)
+final case class NamedParam[A](name: String, param: A)
 
 @annotation.implicitNotFound("${K} is not a supported type for a field name.")
 trait NamedParamConverter[K] {

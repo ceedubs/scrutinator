@@ -8,8 +8,8 @@ trait HeaderReaders {
   import HeaderReaders._
   import Param._
 
-  implicit def headerNamedParamReader[A](implicit reader: ParamReader[ValidatedOption, (FieldKey, HeaderParams), A]): ParamReader[ValidatedOption, (NamedParam[HeaderParam[A]], Request), A] = {
-    ParamReader[ValidatedOption, (NamedParam[HeaderParam[A]], Request), A](Function.tupled { (namedParam, request) =>
+  implicit def headerNamedParamReader[A](implicit reader: ParamReader[ValidatedOption, (FieldKey, HeaderParams), A]): ParamReader[ValidatedOption, (NamedParam[HeaderParam[Param[A]]], Request), A] = {
+    ParamReader[ValidatedOption, (NamedParam[HeaderParam[Param[A]]], Request), A](Function.tupled { (namedParam, request) =>
       val fieldKey = FieldKey(name = namedParam.name, prettyName = namedParam.param.prettyName) 
       val headers = HeaderParams(request.headers)
       reader.reader((fieldKey, headers)).flatMap { maybeA =>

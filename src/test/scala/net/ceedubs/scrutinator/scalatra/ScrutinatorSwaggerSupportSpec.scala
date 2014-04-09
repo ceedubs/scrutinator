@@ -3,7 +3,6 @@ package swagger
 
 import net.ceedubs.scrutinator.scalatra._
 import net.ceedubs.scrutinator.json4s._
-import net.ceedubs.scrutinator.json4s.readers.JsonParam
 import org.scalatra._
 import org.scalatra.swagger._
 import org.scalatra.test.specs2._
@@ -45,15 +44,15 @@ object ScrutinatorSwaggerSupportSpec extends SpecHelpers {
       null)) {}
 
     val doStuffFields =
-      ("queryInt" ->> Param.queryParam[Int]()) ::
-      ("headerString" ->> Param.headerParam[String]()) ::
+      ("queryInt" ->> QueryParam(Param[Int]())) ::
+      ("headerString" ->> HeaderParam(Param[String]())) ::
       //("pathLong" ->> Param.pathParam[Long]()) :: TODO support
-      ("body" ->> JsonModelParam(
+      ("body" ->> JsonBody(SwaggerModel(
         modelId = "JsonBody",
-        fields = 
-          ("string" ->> JsonParam.jsonFieldParam[String]()) ::
-          ("double" ->> JsonParam.jsonFieldParam[Double]()) ::
-          ("boolean" ->> JsonParam.jsonFieldParam[Boolean]()) :: HNil)
+        fields =
+          ("string" ->> Param[String]()) ::
+          ("double" ->> Param[Double]()) ::
+          ("boolean" ->> Param[Boolean]()) :: HNil))
       ) :: HNil
     val doStuffOp = apiOperation[Unit]("doStuff")
       .summary("Do some stuff")

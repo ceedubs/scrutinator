@@ -3,27 +3,28 @@ package swagger
 
 import org.scalatra.swagger.{ AllowableValues, DataType, Parameter, ParamType }
 import net.ceedubs.scrutinator.json4s.readers._
-import net.ceedubs.scrutinator.json4s.readers.JsonParam._
 import shapeless._
 import shapeless.syntax.singleton._
+
 
 class ToSwaggerParamsSpec extends Spec {
   import Param._
   import ValueSource._
 
   "Swagger parameter conversion" should {
-    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Int], stringHeaderParam: RequiredParam[HeaderParam[String]], longQueryParam: ParamWithDefault[Long, QueryString], intJsonParam: JsonFieldParam[Int], stringJsonParam: JsonFieldParam[String], longJsonParam: JsonFieldParam[Long]) =>
+    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Param[Int]], stringHeaderParam: HeaderParam[RequiredParam[Param[String]]], longQueryParam: QueryParam[ParamWithDefault[Long]], intJsonParam: Param[Int], stringJsonParam: Param[String], longJsonParam: Param[Long]) =>
+
       val fields =
         ("queryInt" ->> intQueryParam) ::
         ("headerString" ->> stringHeaderParam) ::
         ("queryLong" ->> longQueryParam) ::
-        ("body" ->> JsonModelParam(
+        ("body" ->> JsonBody(SwaggerModel(
           modelId = "JsonBody",
           fields =
             ("jsonInt" ->> intJsonParam) ::
             ("jsonString" ->> stringJsonParam) ::
-            ("jsonLong" ->> longJsonParam) :: HNil)
-        ) :: HNil
+            ("jsonLong" ->> longJsonParam) :: HNil))) ::
+        HNil
 
       val expectedParams = Seq(
         Parameter(
@@ -65,9 +66,15 @@ class ToSwaggerParamsSpec extends Spec {
       )
 
       def convertModel[A](param: A)(implicit converter: SwaggerModelConverter[A]) = converter(param)
-
+      // code duplicated as a workaround for compiler crash
+      val bodyModel = SwaggerModel(
+          modelId = "JsonBody",
+          fields =
+            ("jsonInt" ->> intJsonParam) ::
+            ("jsonString" ->> stringJsonParam) ::
+            ("jsonLong" ->> longJsonParam) :: HNil)
       val expectedModels = Map(
-        ModelId("JsonBody") -> convertModel(NamedParam("body", fields.get("body"))).eval(Map.empty))
+        ModelId("JsonBody") -> convertModel(bodyModel).eval(Map.empty))
       (expectedModels, expectedParams) ==== FieldListSwaggerConverter.toSwaggerParams(fields).apply(Map.empty)
     }
   }

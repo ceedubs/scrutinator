@@ -32,12 +32,12 @@ class NumberReadersSpec extends Spec with Mockito {
         asParam("short", short)
       ).asJava
       val fields =
-        ("int" ->> queryParam[Int]()) ::
-        ("long" ->> queryParam[Long]()) ::
-        ("byte" ->> queryParam[Byte]()) ::
-        ("double" ->> queryParam[Double]()) ::
-        ("float" ->> queryParam[Float]()) ::
-        ("short" ->> queryParam[Short]()) ::
+        ("int" ->> QueryParam(Param[Int]())) ::
+        ("long" ->> QueryParam(Param[Long]())) ::
+        ("byte" ->> QueryParam(Param[Byte]())) ::
+        ("double" ->> QueryParam(Param[Double]())) ::
+        ("float" ->> QueryParam(Param[Float]())) ::
+        ("short" ->> QueryParam(Param[Short]())) ::
         HNil
       RequestBinding.bindFromRequest(fields).run(mockRequest) must beLike {
         case \/-(params) =>
@@ -62,12 +62,12 @@ class NumberReadersSpec extends Spec with Mockito {
           asParam("short", Some(s))
         ).asJava
         val fields =
-          ("int" ->> queryParam[Int](prettyName = Some("my int"))) ::
-          ("long" ->> queryParam[Long]()) ::
-          ("byte" ->> queryParam[Byte](prettyName = Some("my byte"))) ::
-          ("double" ->> queryParam[Double]()) ::
-          ("float" ->> queryParam[Float]()) ::
-          ("short" ->> queryParam[Short]()) ::
+          ("int" ->> QueryParam(Param[Int](prettyName = Some("my int")))) ::
+          ("long" ->> QueryParam(Param[Long]())) ::
+          ("byte" ->> QueryParam(Param[Byte](prettyName = Some("my byte")))) ::
+          ("double" ->> QueryParam(Param[Double]())) ::
+          ("float" ->> QueryParam(Param[Float]())) ::
+          ("short" ->> QueryParam(Param[Short]())) ::
           HNil
 
         val result = RequestBinding.bindFromRequest(fields).run(mockRequest)

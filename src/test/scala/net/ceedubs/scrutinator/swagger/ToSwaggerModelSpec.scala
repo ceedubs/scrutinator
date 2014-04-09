@@ -2,23 +2,20 @@ package net.ceedubs.scrutinator
 package swagger
 
 import net.ceedubs.scrutinator.json4s.readers._
-import net.ceedubs.scrutinator.json4s.readers.JsonParam._
 import shapeless._
 import shapeless.syntax.singleton._
 import org.scalatra.swagger.{ DataType, Model, ModelProperty }
 
 class ToSwaggerModelSpec extends Spec {
   "Swagger model conversion" should {
-    "convert a JSON object param into a model" ! prop { (intJsonParam: JsonFieldParam[Int], requiredStringJsonParam: RequiredParam[JsonFieldParam[String]], longJsonParam: JsonFieldParam[Long]) =>
-      val bodyFields =
-        ("body" ->> JsonModelParam(
-          modelId = "JsonBody",
-          fields = 
-            ("jsonInt" ->> intJsonParam) ::
-            ("requiredJsonString" ->> requiredStringJsonParam) ::
-            ("jsonLong" ->> longJsonParam) ::
-            HNil) ::
-        HNil)
+    "convert a JSON object param into a model" ! prop { (intJsonParam: Param[Int], requiredStringJsonParam: RequiredParam[Param[String]], longJsonParam: Param[Long]) =>
+      val bodyModel = SwaggerModel(
+        modelId = "JsonBody",
+        fields =
+          ("jsonInt" ->> intJsonParam) ::
+          ("requiredJsonString" ->> requiredStringJsonParam) ::
+          ("jsonLong" ->> longJsonParam) ::
+          HNil)
 
       val expected = Model(
         id = "JsonBody",
@@ -39,7 +36,7 @@ class ToSwaggerModelSpec extends Spec {
 
       def convert[A](param: A)(implicit converter: SwaggerModelConverter[A]) = converter(param)
 
-      (Map(ModelId("JsonBody") -> expected), expected) ==== convert(NamedParam("body", bodyFields.get("body"))).apply(Map.empty)
+      (Map(ModelId("JsonBody") -> expected), expected) ==== convert(bodyModel).apply(Map.empty)
     }
   }
 }

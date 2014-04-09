@@ -11,8 +11,8 @@ trait PathReaders {
   import PathReaders._
   import Param._
 
-  implicit def pathNamedParamReader[A](implicit reader: ParamReader[ValidatedOption, (FieldKey, PathParams), A]): ParamReader[ValidatedOption, (NamedParam[PathParam[A]], Request), A] = {
-    ParamReader[ValidatedOption, (NamedParam[PathParam[A]], Request), A](Function.tupled { (namedParam, request) =>
+  implicit def pathNamedParamReader[A](implicit reader: ParamReader[ValidatedOption, (FieldKey, PathParams), A]): ParamReader[ValidatedOption, (NamedParam[PathParam[Param[A]]], Request), A] = {
+    ParamReader[ValidatedOption, (NamedParam[PathParam[Param[A]]], Request), A](Function.tupled { (namedParam, request) =>
       val fieldKey = FieldKey(name = namedParam.name, prettyName = namedParam.param.prettyName) 
       val multiParams: Option[Map[String, Seq[String]]] = request.get(org.scalatra.MultiParamsKey).flatMap(x =>
         if (x.isInstanceOf[MultiParams]) Some(x.asInstanceOf[MultiParams]) else None)

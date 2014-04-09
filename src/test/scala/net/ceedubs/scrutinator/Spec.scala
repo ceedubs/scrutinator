@@ -43,18 +43,30 @@ trait SpecHelpers {
 }
 
 trait ScrutinatorArb {
-  def genParam[A, S <: ValueSource]: Gen[Param[A, S]] = {
+  def genParam[A]: Gen[Param[A]] = {
     for {
       description <- arbitrary[Option[String]]
       notes <- arbitrary[Option[String]]
       prettyName <- arbitrary[Option[String]]
-    } yield Param[A, S](
+    } yield Param[A](
       description = description,
       notes = notes,
       prettyName = prettyName)
   }
 
-  implicit def arbParam[A, S <: ValueSource]: Arbitrary[Param[A, S]] = Arbitrary(genParam[A, S])
+  implicit def arbParam[A]: Arbitrary[Param[A]] = Arbitrary(genParam[A])
+
+  def genParamFromSource[P, S <: ValueSource](implicit pArb: Arbitrary[P]): Gen[ParamFromSource[P, S]] = {
+    for {
+      param <- pArb.arbitrary
+    } yield ParamFromSource[P, S](param)
+  }
+
+  def arbParamFromSource[P : Arbitrary, S <: ValueSource]: Arbitrary[ParamFromSource[P, S]] = Arbitrary(genParamFromSource[P, S])
+
+  implicit def arbQueryParam[P : Arbitrary]: Arbitrary[QueryParam[P]] = Arbitrary(genParamFromSource[P, ValueSource.QueryString])
+
+  implicit def arbHeaderParam[P : Arbitrary]: Arbitrary[HeaderParam[P]] = Arbitrary(genParamFromSource[P, ValueSource.Headers])
 
   def genRequiredParam[P](implicit arbP: Arbitrary[P]): Gen[RequiredParam[P]] = {
     for {
@@ -65,12 +77,12 @@ trait ScrutinatorArb {
 
   implicit def arbRequiredParam[P : Arbitrary]: Arbitrary[RequiredParam[P]] = Arbitrary(genRequiredParam[P])
 
-  def genParamWithDefault[A, S <: ValueSource](implicit arbA: Arbitrary[A]): Gen[ParamWithDefault[A, S]] = {
+  def genParamWithDefault[A](implicit arbA: Arbitrary[A]): Gen[ParamWithDefault[A]] = {
     for {
       default <- arbA.arbitrary
-      param <- genParam[A, S]
-    } yield ParamWithDefault[A, S](param, default)
+      param <- genParam[A]
+    } yield ParamWithDefault(param, default)
   }
 
-  implicit def arbParamWithDefault[A : Arbitrary, S <: ValueSource]: Arbitrary[ParamWithDefault[A, S]] = Arbitrary(genParamWithDefault[A, S])
+  implicit def arbParamWithDefault[A : Arbitrary]: Arbitrary[ParamWithDefault[A]] = Arbitrary(genParamWithDefault[A])
 }

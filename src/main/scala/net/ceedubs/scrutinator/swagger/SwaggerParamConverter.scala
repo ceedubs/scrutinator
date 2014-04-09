@@ -1,7 +1,6 @@
 package net.ceedubs.scrutinator
 package swagger
 
-import net.ceedubs.scrutinator.json4s.readers.JsonObjectParam
 import org.scalatra.swagger.{ AllowableValues, DataType, Model, Parameter }
 import ValueSource._
 import scalaz._
@@ -11,9 +10,7 @@ import shapeless.contrib.scalaz._
 import shapeless.ops.hlist.ToList
 import shapeless.record._
 
-case class JsonModelParam[L <: HList](modelId: String, fields: L) {
-  def toJsonObjectParam: JsonObjectParam[L] = JsonObjectParam(fields)
-}
+final case class SwaggerModel[L <: HList](modelId: String, fields: L)
 
 trait SwaggerDataTypeConverter[A] {
   def dataType: DataType
@@ -66,8 +63,8 @@ object SwaggerParamConverter extends NamedParamConverters with RequiredParamConv
 
 trait NamedParamConverters {
   implicit def namedParamConverter[A, S <: ValueSource](
-      implicit sourceConverter: SwaggerSourceConverter[S], dataTypeConverter: SwaggerDataTypeConverter[A]): SwaggerParamConverter[NamedParam[Param[A, S]]] = {
-    SwaggerParamConverter[NamedParam[Param[A, S]]] { namedParam =>
+      implicit sourceConverter: SwaggerSourceConverter[S], dataTypeConverter: SwaggerDataTypeConverter[A]): SwaggerParamConverter[NamedParam[ParamFromSource[Param[A], S]]] = {
+    SwaggerParamConverter[NamedParam[ParamFromSource[Param[A], S]]] { namedParam =>
       State.state(Parameter(
         name = namedParam.name,
         `type` = dataTypeConverter.dataType,
@@ -80,10 +77,10 @@ trait NamedParamConverters {
     }
   }
 
-  implicit def namedJsonModelParamConverter[L <: HList](implicit modelConverter: SwaggerModelConverter[NamedParam[JsonModelParam[L]]], sourceConverter: SwaggerSourceConverter[ValueSource.Json]): SwaggerParamConverter[NamedParam[JsonModelParam[L]]] =
-    SwaggerParamConverter[NamedParam[JsonModelParam[L]]]{ namedParam =>
+  implicit def swaggerModelParamConverter[L <: HList, S <: ValueSource](implicit modelConverter: SwaggerModelConverter[SwaggerModel[L]], sourceConverter: SwaggerSourceConverter[S]): SwaggerParamConverter[NamedParam[ParamFromSource[SwaggerModel[L], S]]] =
+    SwaggerParamConverter[NamedParam[ParamFromSource[SwaggerModel[L], S]]]{ namedParam =>
       for {
-        model <- modelConverter(namedParam)
+        model <- modelConverter(namedParam.param)
       } yield Parameter(
         name = namedParam.name,
         `type` = DataType(model.id),
@@ -98,18 +95,22 @@ trait NamedParamConverters {
 }
 
 trait RequiredParamConverters {
-  implicit def namedRequiredParamConverter[A](implicit converter: SwaggerParamConverter[NamedParam[A]]): SwaggerParamConverter[NamedParam[RequiredParam[A]]] = {
-    SwaggerParamConverter[NamedParam[RequiredParam[A]]] { namedRequiredParam =>
-      val namedInnerParam = NamedParam[A](namedRequiredParam.name, namedRequiredParam.param.param)
+  implicit def namedRequiredParamConverter[A, S <: ValueSource](implicit converter: SwaggerParamConverter[NamedParam[ParamFromSource[A, S]]]): SwaggerParamConverter[NamedParam[ParamFromSource[RequiredParam[A], S]]] = {
+    SwaggerParamConverter[NamedParam[ParamFromSource[RequiredParam[A], S]]] { namedRequiredParam =>
+      val namedInnerParam = NamedParam[ParamFromSource[A, S]](
+        namedRequiredParam.name,
+        ParamFromSource[A, S](namedRequiredParam.param.param))
       converter(namedInnerParam).map(_.copy(required = true))
     }
   }
 }
 
 trait ParamWithDefaultConverters {
-  implicit def ParamWithDefaultConverter[A, S <: ValueSource](implicit converter: SwaggerParamConverter[NamedParam[Param[A, S]]], showA: SwaggerShow[A]): SwaggerParamConverter[NamedParam[ParamWithDefault[A, S]]] = {
-    SwaggerParamConverter[NamedParam[ParamWithDefault[A, S]]] { namedParamWithDefault =>
-      val namedInnerParam = NamedParam[Param[A, S]](namedParamWithDefault.name, namedParamWithDefault.param.param)
+  implicit def ParamWithDefaultConverter[A, S <: ValueSource](implicit converter: SwaggerParamConverter[NamedParam[ParamFromSource[Param[A], S]]], showA: SwaggerShow[A]): SwaggerParamConverter[NamedParam[ParamFromSource[ParamWithDefault[A], S]]] = {
+    SwaggerParamConverter[NamedParam[ParamFromSource[ParamWithDefault[A], S]]] { namedParamWithDefault =>
+      val namedInnerParam = NamedParam[ParamFromSource[Param[A], S]](
+        namedParamWithDefault.name,
+        ParamFromSource[Param[A], S](namedParamWithDefault.param.param))
       converter(namedInnerParam).map(_.copy(
         defaultValue = Some(showA.shows(
           SwaggerSpec(namedParamWithDefault.param.default)))))
