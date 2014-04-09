@@ -23,8 +23,8 @@ trait JsonReaders {
       }
     })
 
-  implicit def stringJsonFieldReader: ParamReader[ValidatedOption, (NamedParam[Param[String]], JObject), String] =
-    ParamReader[ValidatedOption, (NamedParam[Param[String]], JObject), String](Function.tupled { (namedParam, jObject) =>
+  implicit def stringJsonFieldReader: ParamReader[ValidatedOption, (NamedParam[Field[String]], JObject), String] =
+    ParamReader[ValidatedOption, (NamedParam[Field[String]], JObject), String](Function.tupled { (namedParam, jObject) =>
     (jObject \ namedParam.name) match {
       case JString(s) => Validation.success(Some(s))
       case JNothing | JNull => Validation.success(None)
@@ -32,8 +32,8 @@ trait JsonReaders {
     }
   })
 
-  implicit def intJsonFieldReader: ParamReader[ValidatedOption, (NamedParam[Param[Int]], JObject), Int] =
-    ParamReader[ValidatedOption, (NamedParam[Param[Int]], JObject), Int](Function.tupled { (namedParam, jObject) =>
+  implicit def intJsonFieldReader: ParamReader[ValidatedOption, (NamedParam[Field[Int]], JObject), Int] =
+    ParamReader[ValidatedOption, (NamedParam[Field[Int]], JObject), Int](Function.tupled { (namedParam, jObject) =>
     (jObject \ namedParam.name) match {
       case JInt(i) => Validation.success(Some(i.toInt))
       case JNothing | JNull => Validation.success(None)
@@ -41,8 +41,8 @@ trait JsonReaders {
     }
   })
 
-  implicit def longFieldReader: ParamReader[ValidatedOption, (NamedParam[Param[Long]], JObject), Long] =
-    ParamReader[ValidatedOption, (NamedParam[Param[Long]], JObject), Long](Function.tupled { (namedParam, jObject) =>
+  implicit def longFieldReader: ParamReader[ValidatedOption, (NamedParam[Field[Long]], JObject), Long] =
+    ParamReader[ValidatedOption, (NamedParam[Field[Long]], JObject), Long](Function.tupled { (namedParam, jObject) =>
     (jObject \ namedParam.name) match {
       case JInt(i) => Validation.success(Some(i.toLong))
       case JNothing | JNull => Validation.success(None)
@@ -50,8 +50,8 @@ trait JsonReaders {
     }
   })
 
-  implicit def doubleFieldReader: ParamReader[ValidatedOption, (NamedParam[Param[Double]], JObject), Double] =
-    ParamReader[ValidatedOption, (NamedParam[Param[Double]], JObject), Double](Function.tupled { (namedParam, jObject) =>
+  implicit def doubleFieldReader: ParamReader[ValidatedOption, (NamedParam[Field[Double]], JObject), Double] =
+    ParamReader[ValidatedOption, (NamedParam[Field[Double]], JObject), Double](Function.tupled { (namedParam, jObject) =>
     (jObject \ namedParam.name) match {
       case JDouble(i) => Validation.success(Some(i.toDouble))
       case JInt(i) => Validation.success(Some(i.toDouble))
@@ -60,8 +60,8 @@ trait JsonReaders {
     }
   })
 
-  implicit def floatFieldReader: ParamReader[ValidatedOption, (NamedParam[Param[Float]], JObject), Float] =
-    ParamReader[ValidatedOption, (NamedParam[Param[Float]], JObject), Float](Function.tupled { (namedParam, jObject) =>
+  implicit def floatFieldReader: ParamReader[ValidatedOption, (NamedParam[Field[Float]], JObject), Float] =
+    ParamReader[ValidatedOption, (NamedParam[Field[Float]], JObject), Float](Function.tupled { (namedParam, jObject) =>
     (jObject \ namedParam.name) match {
       case JDouble(i) => Validation.success(Some(i.toFloat))
       case JDecimal(i) => Validation.success(Some(i.toFloat))
@@ -70,8 +70,8 @@ trait JsonReaders {
     }
   })
 
-  implicit def shortFieldReader: ParamReader[ValidatedOption, (NamedParam[Param[Short]], JObject), Short] =
-    ParamReader[ValidatedOption, (NamedParam[Param[Short]], JObject), Short](Function.tupled { (namedParam, jObject) =>
+  implicit def shortFieldReader: ParamReader[ValidatedOption, (NamedParam[Field[Short]], JObject), Short] =
+    ParamReader[ValidatedOption, (NamedParam[Field[Short]], JObject), Short](Function.tupled { (namedParam, jObject) =>
     (jObject \ namedParam.name) match {
       case JInt(i) => Validation.success(Some(i.toShort))
       case JNothing | JNull => Validation.success(None)
@@ -79,8 +79,8 @@ trait JsonReaders {
     }
   })
 
-  implicit def booleanFieldReader: ParamReader[ValidatedOption, (NamedParam[Param[Boolean]], JObject), Boolean] =
-    ParamReader[ValidatedOption, (NamedParam[Param[Boolean]], JObject), Boolean](Function.tupled { (namedParam, jObject) =>
+  implicit def booleanFieldReader: ParamReader[ValidatedOption, (NamedParam[Field[Boolean]], JObject), Boolean] =
+    ParamReader[ValidatedOption, (NamedParam[Field[Boolean]], JObject), Boolean](Function.tupled { (namedParam, jObject) =>
     (jObject \ namedParam.name) match {
       case JBool(b) => Validation.success(Some(b))
       case JNothing | JNull => Validation.success(None)

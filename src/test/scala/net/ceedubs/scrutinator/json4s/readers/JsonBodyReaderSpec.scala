@@ -13,20 +13,20 @@ import scala.collection.JavaConverters._
 import org.scalatra.validation.{ FieldName, ValidationError }
 
 class JsonBodyReaderSpec extends Spec {
-  import Param._
+  import Field._
   import ValueSource._
 
  "A Json body reader" should {
     "successfully bind valid params" ! prop { (string: Option[String], int: Option[Int], long: Option[Long], double: Option[Double], float: Option[Float], short: Option[Short], boolean: Option[Boolean]) =>
       val fields =
         ("body" ->> JsonBody(Fields(
-          ("string" ->> Param[String]()) ::
-          ("int" ->> Param[Int]()) ::
-          ("long" ->> Param[Long]()) ::
-          ("double" ->> Param[Double]()) ::
-          ("float" ->> Param[Float]()) ::
-          ("short" ->> Param[Short]()) ::
-          ("boolean" ->> Param[Boolean]()) ::
+          ("string" ->> Field[String]()) ::
+          ("int" ->> Field[Int]()) ::
+          ("long" ->> Field[Long]()) ::
+          ("double" ->> Field[Double]()) ::
+          ("float" ->> Field[Float]()) ::
+          ("short" ->> Field[Short]()) ::
+          ("boolean" ->> Field[Boolean]()) ::
           HNil))
         ) :: HNil
 
@@ -50,8 +50,8 @@ class JsonBodyReaderSpec extends Spec {
     "return validation errors for invalid params" ! prop { (int: Int, boolean: Boolean) =>
       val fields =
         ("body" ->> JsonBody(Fields(
-          ("string1" ->> Param[String](prettyName = Some("String 1"))) ::
-          ("string2" ->> Param[String]()) ::
+          ("string1" ->> Field[String](prettyName = Some("String 1"))) ::
+          ("string2" ->> Field[String]()) ::
           HNil))
         ) :: HNil
 

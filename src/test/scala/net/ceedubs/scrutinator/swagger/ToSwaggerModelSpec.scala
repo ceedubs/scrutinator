@@ -8,7 +8,7 @@ import org.scalatra.swagger.{ DataType, Model, ModelProperty }
 
 class ToSwaggerModelSpec extends Spec {
   "Swagger model conversion" should {
-    "convert a JSON object param into a model" ! prop { (intJsonParam: Param[Int], requiredStringJsonParam: RequiredParam[Param[String]], longJsonParam: Param[Long]) =>
+    "convert a JSON object param into a model" ! prop { (intJsonParam: Field[Int], requiredStringJsonParam: RequiredParam[Field[String]], longJsonParam: Field[Long]) =>
       val bodyModel = SwaggerModel(
         modelId = "JsonBody",
         fields =

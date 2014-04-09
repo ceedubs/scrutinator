@@ -12,7 +12,7 @@ import scala.collection.JavaConverters._
 import org.scalatra.validation.{ FieldName, ValidationError }
 
 class NumberReadersSpec extends Spec with Mockito {
-  import Param._
+  import Field._
   import ValueSource._
 
   def asParam(key: String, value: Option[Any]) =
@@ -32,12 +32,12 @@ class NumberReadersSpec extends Spec with Mockito {
         asParam("short", short)
       ).asJava
       val fields =
-        ("int" ->> QueryParam(Param[Int]())) ::
-        ("long" ->> QueryParam(Param[Long]())) ::
-        ("byte" ->> QueryParam(Param[Byte]())) ::
-        ("double" ->> QueryParam(Param[Double]())) ::
-        ("float" ->> QueryParam(Param[Float]())) ::
-        ("short" ->> QueryParam(Param[Short]())) ::
+        ("int" ->> QueryParam(Field[Int]())) ::
+        ("long" ->> QueryParam(Field[Long]())) ::
+        ("byte" ->> QueryParam(Field[Byte]())) ::
+        ("double" ->> QueryParam(Field[Double]())) ::
+        ("float" ->> QueryParam(Field[Float]())) ::
+        ("short" ->> QueryParam(Field[Short]())) ::
         HNil
       RequestBinding.bindFromRequest(fields).run(mockRequest) must beLike {
         case \/-(params) =>
@@ -62,12 +62,12 @@ class NumberReadersSpec extends Spec with Mockito {
           asParam("short", Some(s))
         ).asJava
         val fields =
-          ("int" ->> QueryParam(Param[Int](prettyName = Some("my int")))) ::
-          ("long" ->> QueryParam(Param[Long]())) ::
-          ("byte" ->> QueryParam(Param[Byte](prettyName = Some("my byte")))) ::
-          ("double" ->> QueryParam(Param[Double]())) ::
-          ("float" ->> QueryParam(Param[Float]())) ::
-          ("short" ->> QueryParam(Param[Short]())) ::
+          ("int" ->> QueryParam(Field[Int](prettyName = Some("my int")))) ::
+          ("long" ->> QueryParam(Field[Long]())) ::
+          ("byte" ->> QueryParam(Field[Byte](prettyName = Some("my byte")))) ::
+          ("double" ->> QueryParam(Field[Double]())) ::
+          ("float" ->> QueryParam(Field[Float]())) ::
+          ("short" ->> QueryParam(Field[Short]())) ::
           HNil
 
         val result = RequestBinding.bindFromRequest(fields).run(mockRequest)

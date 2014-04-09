@@ -63,8 +63,8 @@ object SwaggerParamConverter extends NamedParamConverters with RequiredParamConv
 
 trait NamedParamConverters {
   implicit def namedParamConverter[A, S <: ValueSource](
-      implicit sourceConverter: SwaggerSourceConverter[S], dataTypeConverter: SwaggerDataTypeConverter[A]): SwaggerParamConverter[NamedParam[ParamFromSource[Param[A], S]]] = {
-    SwaggerParamConverter[NamedParam[ParamFromSource[Param[A], S]]] { namedParam =>
+      implicit sourceConverter: SwaggerSourceConverter[S], dataTypeConverter: SwaggerDataTypeConverter[A]): SwaggerParamConverter[NamedParam[ParamFromSource[Field[A], S]]] = {
+    SwaggerParamConverter[NamedParam[ParamFromSource[Field[A], S]]] { namedParam =>
       State.state(Parameter(
         name = namedParam.name,
         `type` = dataTypeConverter.dataType,
@@ -106,11 +106,11 @@ trait RequiredParamConverters {
 }
 
 trait ParamWithDefaultConverters {
-  implicit def ParamWithDefaultConverter[A, S <: ValueSource](implicit converter: SwaggerParamConverter[NamedParam[ParamFromSource[Param[A], S]]], showA: SwaggerShow[A]): SwaggerParamConverter[NamedParam[ParamFromSource[ParamWithDefault[A], S]]] = {
+  implicit def ParamWithDefaultConverter[A, S <: ValueSource](implicit converter: SwaggerParamConverter[NamedParam[ParamFromSource[Field[A], S]]], showA: SwaggerShow[A]): SwaggerParamConverter[NamedParam[ParamFromSource[ParamWithDefault[A], S]]] = {
     SwaggerParamConverter[NamedParam[ParamFromSource[ParamWithDefault[A], S]]] { namedParamWithDefault =>
-      val namedInnerParam = NamedParam[ParamFromSource[Param[A], S]](
+      val namedInnerParam = NamedParam[ParamFromSource[Field[A], S]](
         namedParamWithDefault.name,
-        ParamFromSource[Param[A], S](namedParamWithDefault.param.param))
+        ParamFromSource[Field[A], S](namedParamWithDefault.param.param))
       converter(namedInnerParam).map(_.copy(
         defaultValue = Some(showA.shows(
           SwaggerSpec(namedParamWithDefault.param.default)))))

@@ -66,16 +66,16 @@ trait SwaggerModelConverters {
 }
 
 trait FieldModelPropertyConverters {
-  implicit def fieldModelPropertyConverter[A](implicit dataTypeConverter: SwaggerDataTypeConverter[A]): SwaggerModelPropertyConverter[NamedParam[Param[A]]] =
-    SwaggerModelPropertyConverter[NamedParam[Param[A]]](namedParam =>
+  implicit def fieldModelPropertyConverter[A](implicit dataTypeConverter: SwaggerDataTypeConverter[A]): SwaggerModelPropertyConverter[NamedParam[Field[A]]] =
+    SwaggerModelPropertyConverter[NamedParam[Field[A]]](namedParam =>
       State.state(
         ModelProperty(
           `type` = dataTypeConverter.dataType,
           required = false,
           description = None /* TODO */)))
 
-  implicit def requiredFieldModelPropertyConverter[A](implicit converter: SwaggerModelPropertyConverter[NamedParam[Param[A]]]): SwaggerModelPropertyConverter[NamedParam[RequiredParam[Param[A]]]] =
-    SwaggerModelPropertyConverter[NamedParam[RequiredParam[Param[A]]]] { namedParam =>
+  implicit def requiredFieldModelPropertyConverter[A](implicit converter: SwaggerModelPropertyConverter[NamedParam[Field[A]]]): SwaggerModelPropertyConverter[NamedParam[RequiredParam[Field[A]]]] =
+    SwaggerModelPropertyConverter[NamedParam[RequiredParam[Field[A]]]] { namedParam =>
       val nestedNamedParam = NamedParam(namedParam.name, namedParam.param.param)
       converter(nestedNamedParam).map(_.copy(required = true))
     }

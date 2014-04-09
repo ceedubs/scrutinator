@@ -43,18 +43,18 @@ trait SpecHelpers {
 }
 
 trait ScrutinatorArb {
-  def genParam[A]: Gen[Param[A]] = {
+  def genParam[A]: Gen[Field[A]] = {
     for {
       description <- arbitrary[Option[String]]
       notes <- arbitrary[Option[String]]
       prettyName <- arbitrary[Option[String]]
-    } yield Param[A](
+    } yield Field[A](
       description = description,
       notes = notes,
       prettyName = prettyName)
   }
 
-  implicit def arbParam[A]: Arbitrary[Param[A]] = Arbitrary(genParam[A])
+  implicit def arbParam[A]: Arbitrary[Field[A]] = Arbitrary(genParam[A])
 
   def genParamFromSource[P, S <: ValueSource](implicit pArb: Arbitrary[P]): Gen[ParamFromSource[P, S]] = {
     for {

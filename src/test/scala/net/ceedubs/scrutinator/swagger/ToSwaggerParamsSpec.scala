@@ -8,11 +8,11 @@ import shapeless.syntax.singleton._
 
 
 class ToSwaggerParamsSpec extends Spec {
-  import Param._
+  import Field._
   import ValueSource._
 
   "Swagger parameter conversion" should {
-    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Param[Int]], stringHeaderParam: HeaderParam[RequiredParam[Param[String]]], longQueryParam: QueryParam[ParamWithDefault[Long]], intJsonParam: Param[Int], stringJsonParam: Param[String], longJsonParam: Param[Long]) =>
+    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Field[Int]], stringHeaderParam: HeaderParam[RequiredParam[Field[String]]], longQueryParam: QueryParam[ParamWithDefault[Long]], intJsonParam: Field[Int], stringJsonParam: Field[String], longJsonParam: Field[Long]) =>
 
       val fields =
         ("queryInt" ->> intQueryParam) ::
