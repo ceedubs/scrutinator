@@ -20,7 +20,7 @@ class JsonBodyReaderSpec extends Spec {
     "successfully bind valid params" ! prop { (
         string: Option[String], stringField: Field[String],
         boolean: Option[Boolean], booleanField: Field[Boolean],
-        stringWithDefault: Option[String], stringWithDefaultField: ParamWithDefault[String],
+        stringWithDefault: Option[String], stringWithDefaultField: FieldWithDefault[String],
         requiredBoolean: Boolean, requiredBooleanField: RequiredParam[Field[Boolean]]) =>
 
       val fields =

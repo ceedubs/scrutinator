@@ -107,8 +107,8 @@ trait RequiredParamConverters {
 }
 
 trait ParamWithDefaultConverters {
-  implicit def ParamWithDefaultConverter[A, S <: ValueSource](implicit converter: SwaggerParamConverter[NamedParam[ParamFromSource[Field[A], S]]], showA: SwaggerShow[A]): SwaggerParamConverter[NamedParam[ParamFromSource[ParamWithDefault[A], S]]] = {
-    SwaggerParamConverter[NamedParam[ParamFromSource[ParamWithDefault[A], S]]] { namedParamWithDefault =>
+  implicit def ParamWithDefaultConverter[A, S <: ValueSource](implicit converter: SwaggerParamConverter[NamedParam[ParamFromSource[Field[A], S]]], showA: SwaggerShow[A]): SwaggerParamConverter[NamedParam[ParamFromSource[FieldWithDefault[A], S]]] = {
+    SwaggerParamConverter[NamedParam[ParamFromSource[FieldWithDefault[A], S]]] { namedParamWithDefault =>
       val namedInnerParam = NamedParam[ParamFromSource[Field[A], S]](
         namedParamWithDefault.name,
         ParamFromSource[Field[A], S](namedParamWithDefault.param.param))

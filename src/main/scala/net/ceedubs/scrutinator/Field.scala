@@ -6,7 +6,7 @@ import shapeless._
  * A parameter of type A.
  * For example, a Field[Int] will result in an Int after binding.
  * That Int may be wrapped in an Option, depending on whether this
- * Field is wrapped in a RequiredParam, ParamWithDefault, etc.
+ * Field is wrapped in a RequiredParam, FieldWithDefault, etc.
  */
 final case class Field[A](
   description: Option[String] = Field.Defaults.description,
@@ -21,7 +21,7 @@ final case class Field[A](
 
   def required(errorMsg: NamedParam[Field[A]] => String): RequiredParam[Field[A]] = RequiredParam(this, errorMsg)
 
-  def withDefault(default: A): ParamWithDefault[A] = ParamWithDefault(this, default)
+  def withDefault(default: A): FieldWithDefault[A] = FieldWithDefault(this, default)
 
 }
 
@@ -48,6 +48,6 @@ final case class RequiredParam[A](
   param: A,
   errorMsg: NamedParam[A] => String)
 
-final case class ParamWithDefault[A](
+final case class FieldWithDefault[A](
   param: Field[A],
   default: A)

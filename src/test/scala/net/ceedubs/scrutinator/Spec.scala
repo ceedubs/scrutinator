@@ -78,14 +78,14 @@ trait ScrutinatorArb {
 
   implicit def arbRequiredParam[P : Arbitrary]: Arbitrary[RequiredParam[P]] = Arbitrary(genRequiredParam[P])
 
-  def genParamWithDefault[A](implicit arbA: Arbitrary[A]): Gen[ParamWithDefault[A]] = {
+  def genParamWithDefault[A](implicit arbA: Arbitrary[A]): Gen[FieldWithDefault[A]] = {
     for {
       default <- arbA.arbitrary
       param <- genParam[A]
-    } yield ParamWithDefault(param, default)
+    } yield FieldWithDefault(param, default)
   }
 
-  implicit def arbParamWithDefault[A : Arbitrary]: Arbitrary[ParamWithDefault[A]] = Arbitrary(genParamWithDefault[A])
+  implicit def arbParamWithDefault[A : Arbitrary]: Arbitrary[FieldWithDefault[A]] = Arbitrary(genParamWithDefault[A])
 
   // there is a better implementation in scalaz-scalacheck-binding,
   // but we have a Scalacheck version mismatch :\

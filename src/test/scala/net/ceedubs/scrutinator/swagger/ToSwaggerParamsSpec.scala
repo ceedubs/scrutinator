@@ -12,7 +12,7 @@ class ToSwaggerParamsSpec extends Spec {
   import ValueSource._
 
   "Swagger parameter conversion" should {
-    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Field[Int]], stringHeaderParam: HeaderParam[RequiredParam[Field[String]]], longQueryParam: QueryParam[ParamWithDefault[Long]], intJsonParam: Field[Int], stringJsonParam: Field[String], longJsonParam: Field[Long]) =>
+    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Field[Int]], stringHeaderParam: HeaderParam[RequiredParam[Field[String]]], longQueryParam: QueryParam[FieldWithDefault[Long]], intJsonParam: Field[Int], stringJsonParam: Field[String], longJsonParam: Field[Long]) =>
 
       val fields =
         ("queryInt" ->> intQueryParam) ::
