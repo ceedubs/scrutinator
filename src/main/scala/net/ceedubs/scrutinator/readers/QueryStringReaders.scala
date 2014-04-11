@@ -13,7 +13,7 @@ trait QueryStringReaders {
   implicit def queryStringNamedParamReader[A](implicit reader: ParamReader[ValidatedOption, (FieldKey, QueryStringParams), A]): ParamReader[ValidatedOption, (NamedParam[QueryParam[Field[A]]], Request), A] = {
     ParamReader[ValidatedOption, (NamedParam[QueryParam[Field[A]]], Request), A](Function.tupled { (namedParam, request) =>
       val fieldKey = FieldKey(name = namedParam.name, prettyName = namedParam.param.prettyName) 
-      val queryParams = QueryStringParams(request.parameters)
+      val queryParams = QueryStringParams(request.multiParameters)
       reader.reader((fieldKey, queryParams)).flatMap { maybeA =>
         std.option.cata(maybeA)({ a =>
           val errors = namedParam.param.validations.map(_.apply(fieldKey, a)
@@ -27,7 +27,7 @@ trait QueryStringReaders {
   implicit val queryStringStringFieldReader: ParamReader[ValidatedOption, (FieldKey, QueryStringParams), String] = {
     val kleisli = Kleisli[ValidatedOption, (FieldKey, QueryStringParams), String](Function.tupled(
       (fieldKey, queryParams) =>
-        Validation.success(queryParams.get(fieldKey.name).filterNot(_.isEmpty))))
+        Validation.success(queryParams.get(fieldKey.name).flatMap(_.headOption).filterNot(_.isEmpty))))
     ParamReader.fromKleisli(kleisli)
  
   }
@@ -37,10 +37,10 @@ trait QueryStringReaders {
 object QueryStringReaders extends QueryStringReaders {
   import ValueSource.QueryString
 
-  type QueryStringParams = Map[String, String] @@ QueryString
+  type QueryStringParams = Map[String, Seq[String]] @@ QueryString
 
   object QueryStringParams {
     val tagger: Tagger[QueryString] = tag[QueryString]
-    def apply(params: Map[String, String]): QueryStringParams = tagger[Map[String, String]](params)
+    def apply(params: Map[String, Seq[String]]): QueryStringParams = tagger[Map[String, Seq[String]]](params)
   }
 }
