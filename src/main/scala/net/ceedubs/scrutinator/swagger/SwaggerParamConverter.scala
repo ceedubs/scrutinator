@@ -22,14 +22,28 @@ object SwaggerDataTypeConverter {
   }
 
   implicit val intSwaggerDataConverter: SwaggerDataTypeConverter[Int] = apply[Int](DataType.Int)
+
   implicit val stringSwaggerDataConverter: SwaggerDataTypeConverter[String] = apply[String](DataType.String)
+
   implicit val booleanSwaggerDataConverter: SwaggerDataTypeConverter[Boolean] = apply[Boolean](DataType.Boolean)
+
   implicit val longSwaggerDataConverter: SwaggerDataTypeConverter[Long] = apply[Long](DataType.Long)
+
   implicit val floatSwaggerDataConverter: SwaggerDataTypeConverter[Float] = apply[Float](DataType.Float)
+
   implicit val doubleSwaggerDataConverter: SwaggerDataTypeConverter[Double] = apply[Double](DataType.Double)
+
   implicit val dateSwaggerDataConverter: SwaggerDataTypeConverter[java.util.Date] = apply[java.util.Date](DataType.Date)
+
   implicit def listSwaggerDataConverter[A](implicit aConverter: SwaggerDataTypeConverter[A]): SwaggerDataTypeConverter[List[A]] = apply[List[A]](DataType.GenList(aConverter.dataType))
+
   implicit def setSwaggerDataConverter[A](implicit aConverter: SwaggerDataTypeConverter[A]): SwaggerDataTypeConverter[Set[A]] = apply[Set[A]](DataType.GenSet(aConverter.dataType))
+
+  implicit def vectorSwaggerDataConverter[A](implicit aConverter: SwaggerDataTypeConverter[A]): SwaggerDataTypeConverter[Vector[A]] = apply[Vector[A]](DataType.GenList(aConverter.dataType))
+
+  implicit def seqSwaggerDataConverter[A](implicit aConverter: SwaggerDataTypeConverter[A]): SwaggerDataTypeConverter[Seq[A]] = apply[Seq[A]](DataType.GenList(aConverter.dataType))
+
+  implicit def indexedSeqSwaggerDataConverter[A](implicit aConverter: SwaggerDataTypeConverter[A]): SwaggerDataTypeConverter[IndexedSeq[A]] = apply[IndexedSeq[A]](DataType.GenList(aConverter.dataType))
 }
 
 trait SwaggerSourceConverter[S <: ValueSource] {

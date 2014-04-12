@@ -21,7 +21,7 @@ class NumberReadersSpec extends Spec with Mockito {
 
  "Number param readers" should {
     "successfully bind valid numbers in the query string" ! prop { (int: Option[Int], long: Option[Long],
-        byte: Option[Byte], double: Option[Double], float: Option[Float], short: Option[Short]) =>
+        byte: Option[Byte], double: Option[Double], float: Option[Float], short: Option[Short], doubles: Array[Double]) =>
 
       val mockRequest = mock[HttpServletRequest]
       mockRequest.getParameterMap returns Map(
@@ -30,7 +30,8 @@ class NumberReadersSpec extends Spec with Mockito {
         asParam("byte", byte),
         asParam("double", double),
         asParam("float", float),
-        asParam("short", short)
+        asParam("short", short),
+        "doubles" -> doubles.map(_.toString)
       ).asJava
       val fields =
         ("int" ->> QueryParam(Field[Int]())) ::
@@ -39,6 +40,7 @@ class NumberReadersSpec extends Spec with Mockito {
         ("double" ->> QueryParam(Field[Double]())) ::
         ("float" ->> QueryParam(Field[Float]())) ::
         ("short" ->> QueryParam(Field[Short]())) ::
+        ("doubles" ->> QueryParam(Field[Set[Double]]())) ::
         HNil
 
       RequestBinding.bindFromRequest(fields).run(mockRequest) must beLike {
@@ -49,6 +51,7 @@ class NumberReadersSpec extends Spec with Mockito {
           double ==== params.get("double")
           float ==== params.get("float")
           short ==== params.get("short")
+          Option(doubles.toSet) ==== params.get("doubles")
       }
     }
 

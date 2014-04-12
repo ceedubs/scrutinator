@@ -3,9 +3,11 @@ package readers
 
 import scalaz.{ @@ => _, _ }
 import scalaz.std.option._
+import scalaz.std.list._
 import shapeless.tag
 import shapeless.tag._
 import org.scalatra.validation.{ FieldName, ValidationError }
+import collection.generic.CanBuildFrom
 
 trait QueryStringReaders {
   import QueryStringReaders._
@@ -36,8 +38,15 @@ trait QueryStringReaders {
         elReader.r.reader((nestedHistory, s)))
     }
 
-  //implicit val stringQueryStringFieldReader: FieldReader[ValidatedOption, QueryStringParams, String] =
-  //  queryStringFieldReader(stringQueryStringElReader)
+  implicit def cbfQueryStringFieldReader[C[_], A](implicit elReader: QueryStringElReader[A], cbf: CanBuildFrom[Nothing, A, C[A]]): FieldReader[ValidatedOption, QueryStringParams, C[A]] =
+    FieldReader.reader[ValidatedOption, QueryStringParams, C[A]] { (history, fieldC, queryParams) =>
+      val fieldHistory = fieldC :: history
+      Traverse[Option].traverseU(queryParams.get(fieldC.name))(seq =>
+        (Traverse[List].traverseU(seq.zipWithIndex.toList){ case (s, index) =>
+          val indexHistory = IndexC(index) :: fieldHistory 
+          elReader.r.reader((indexHistory, s))}
+        ).map(_.to[C]))
+    }
 }
 
 object QueryStringReaders extends QueryStringReaders {
