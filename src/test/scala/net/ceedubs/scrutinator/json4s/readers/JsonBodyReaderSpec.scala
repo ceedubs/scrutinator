@@ -145,5 +145,39 @@ class JsonBodyReaderSpec extends Spec {
       }
     }
 
+    "successfully bind nested params" ! prop { (
+        string: Option[String], stringField: Field[String],
+        boolean: Option[Boolean], booleanField: Field[Boolean],
+        stringWithDefault: Option[String], stringWithDefaultField: FieldWithDefault[String],
+        requiredBoolean: Boolean, requiredBooleanField: RequiredParam[Field[Boolean]]) =>
+
+      val fields =
+        ("body" ->> JsonBody(Fields(
+          ("string" ->> stringField) ::
+          ("foo" ->> Fields(
+            ("boolean" ->> booleanField) ::
+            ("stringWithDefault" ->> stringWithDefaultField) :: HNil)) ::
+          ("requiredBoolean" ->> requiredBooleanField) :: HNil))
+        ) :: HNil
+
+      val body =
+        ("string" -> string) ~
+        ("foo" -> (
+          ("boolean" -> boolean) ~
+          ("stringWithDefault" -> stringWithDefault))) ~
+        ("requiredBoolean" -> requiredBoolean)
+      val request = mockRequest(jsonBody = Some(compact(render(body))))
+
+      val results = RequestBinding.bindFromRequest(fields).run(request).map { params =>
+        val body = params.get("body")
+        val foo = body.get("foo")
+        (body.get("string"), foo.get("boolean"), foo.get("stringWithDefault"), body.get("requiredBoolean"))
+      }
+      \/.right[Errors, (Option[String], Option[Boolean], String, Boolean)]((
+        string,
+        boolean,
+        stringWithDefault.getOrElse(stringWithDefaultField.default),
+        requiredBoolean)) ==== results
+    }
   }
 }

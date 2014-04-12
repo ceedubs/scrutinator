@@ -99,6 +99,13 @@ trait JsonReaders {
 
   implicit def jsonBodyFieldBinder[L <: HList](implicit strategy: FieldBindingStrategy[L, JValue, bindJsonFields.type]): FieldBinder.Aux[L, JValue, strategy.R] = strategy.fieldBinder
 
+  implicit def nestedJsonObjectReader[L <: HList](implicit binder: FieldBinder[L, JValue]): ParamReader[Validated, (NamedParam[Fields[L]], JValue), binder.R] =
+    ParamReader[Validated, (NamedParam[Fields[L]], JValue), binder.R] { case (history, (namedParam, jValue)) =>
+      binder(namedParam.param.fields).run((
+        FieldC(namedParam.name, None) :: history,
+        jValue \ namedParam.name))
+    }
+
   implicit def jsonRequestBodyReader[L <: HList](implicit binder: FieldBinder[L, JValue]): ParamReader[Validated, (NamedParam[JsonBody[Fields[L]]], Request), binder.R] =
     ParamReader[Validated, (NamedParam[JsonBody[Fields[L]]], Request), binder.R] { case (history, (namedParam, request)) =>
       Validation.fromTryCatch(JsonMethods.parse(request.body)).
