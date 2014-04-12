@@ -3,7 +3,7 @@ package net.ceedubs.scrutinator
 import shapeless._
 import shapeless.record._
 import shapeless.ops.record.Keys
-import shapeless.ops.hlist.{ Mapper, Tupler, ZipConst }
+import shapeless.ops.hlist.ZipWithKeys
 import shapeless.contrib.scalaz._
 import scalaz._
 import scalaz.Leibniz._
@@ -43,24 +43,22 @@ object FieldBindingStrategy {
     type R = R0
   }
 
-  implicit def polyTraverserStrategy[L <: HList, K <: HList, I, P <: Poly, O1 <: HList, F0[_], O2 <: HList, F1[_], O3 <: HList, O4 <: HList](implicit
+  implicit def polyTraverserStrategy[L <: HList, K <: HList, I, P <: Poly, O1 <: HList, F0[_], O2 <: HList, F1[_], O3 <: HList](implicit
       keys: Keys.Aux[L, K],
       bindParamTraverser: TraverserAux[L, P, F0, O1],
       fEv: UnapplyAux[Functor, F0[O1], F1, O2],
-      zipper: shapeless.ops.hlist.Zip.Aux[K :: O2 :: HNil, O3],
-      fieldMapper: Mapper.Aux[tuplesToFields.type, O3, O4],
-      lEv: F1[O4] === Kleisli[Validated, (CursorHistory, I), O4]): FieldBindingStrategy.Aux[L, I, P, O4] = new FieldBindingStrategy[L, I, P] {
+      zipWithKeys: ZipWithKeys.Aux[K, O2, O3],
+      lEv: F1[O3] === Kleisli[Validated, (CursorHistory, I), O3]): FieldBindingStrategy.Aux[L, I, P, O3] = new FieldBindingStrategy[L, I, P] {
 
-    type R = O4
+    type R = O3
 
     val fieldBinder = new FieldBinder[L, I] {
-      type R = O4
+      type R = O3
 
-      def apply(fields: L): Kleisli[Validated, (CursorHistory, I), O4] = {
+      def apply(fields: L): Kleisli[Validated, (CursorHistory, I), O3] = {
         val bindingsReader = bindParamTraverser(fields)
         val result = fEv.TC.map(fEv(bindingsReader)) { boundValues =>
-          val tupled = zipper(keys() :: boundValues :: HNil) 
-          fieldMapper(tupled)
+          zipWithKeys(keys(), boundValues)
         }
         witness(lEv)(result)
       }
