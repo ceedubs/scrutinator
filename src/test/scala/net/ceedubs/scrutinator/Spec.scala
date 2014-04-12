@@ -71,6 +71,8 @@ trait ScrutinatorArb {
 
   implicit def arbHeaderParam[P : Arbitrary]: Arbitrary[HeaderParam[P]] = Arbitrary(genParamFromSource[P, ValueSource.Headers])
 
+  implicit def arbPathParam[P : Arbitrary]: Arbitrary[PathParam[P]] = Arbitrary(genParamFromSource[P, ValueSource.Path])
+
   def genRequiredParam[P](implicit arbP: Arbitrary[P]): Gen[RequiredParam[P]] = {
     for {
       param <- arbP.arbitrary

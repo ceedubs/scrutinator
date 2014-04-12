@@ -50,6 +50,9 @@ object SwaggerSourceConverter {
 
   implicit val jsonBodySourceConverter: SwaggerSourceConverter[Json] =
     SwaggerSourceConverter(org.scalatra.swagger.ParamType.Body)
+
+  implicit val pathSourceConverter: SwaggerSourceConverter[Path] =
+    SwaggerSourceConverter(org.scalatra.swagger.ParamType.Path)
 }
 
 trait SwaggerParamConverter[A] {

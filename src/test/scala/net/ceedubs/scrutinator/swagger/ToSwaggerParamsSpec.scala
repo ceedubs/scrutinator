@@ -12,12 +12,13 @@ class ToSwaggerParamsSpec extends Spec {
   import ValueSource._
 
   "Swagger parameter conversion" should {
-    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Field[Int]], stringHeaderParam: HeaderParam[RequiredParam[Field[String]]], longQueryParam: QueryParam[FieldWithDefault[Long]], intJsonParam: Field[Int], stringJsonParam: Field[String], longJsonParam: Field[Long]) =>
+    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Field[Int]], stringHeaderParam: HeaderParam[RequiredParam[Field[String]]], longQueryParam: QueryParam[FieldWithDefault[Long]], doublePathParam: PathParam[RequiredParam[Field[Double]]], intJsonParam: Field[Int], stringJsonParam: Field[String], longJsonParam: Field[Long]) =>
 
       val fields =
         ("queryInt" ->> intQueryParam) ::
         ("headerString" ->> stringHeaderParam) ::
         ("queryLong" ->> longQueryParam) ::
+        ("pathDouble" ->> doublePathParam) ::
         ("body" ->> JsonBody(SwaggerModel(
           modelId = "JsonBody",
           fields =
@@ -54,6 +55,15 @@ class ToSwaggerParamsSpec extends Spec {
           defaultValue = Some(longQueryParam.default.toString),
           allowableValues = AllowableValues.AnyValue,
           required = false),
+        Parameter(
+          name = "pathDouble",
+          `type` = DataType.Double,
+          description = doublePathParam.param.description,
+          notes = doublePathParam.param.notes,
+          paramType = ParamType.Path,
+          defaultValue = None,
+          allowableValues = AllowableValues.AnyValue,
+          required = true),
         Parameter(
           name = "body",
           `type` = DataType("JsonBody"),
