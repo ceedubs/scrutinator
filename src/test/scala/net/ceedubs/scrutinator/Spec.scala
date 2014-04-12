@@ -37,6 +37,8 @@ abstract class Spec extends Specification
    
 }
 
+case object ForcedError extends ParamError
+
 trait SpecHelpers {
   def typed[A](a: => A) {}
 

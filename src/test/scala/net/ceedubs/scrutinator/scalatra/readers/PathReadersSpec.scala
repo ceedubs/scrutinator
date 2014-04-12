@@ -36,8 +36,12 @@ class PathReadersSpec extends Spec with Mockito with MutableScalatraSpec {
         get(s"/test2/$int/${urlEncode(string)}") {
           status ==== 422
           body ==== NonEmptyList(
-            ValidationError("int should fail", FieldName("int")),
-            ValidationError("string should fail", FieldName("string"))).toString
+            ScopedValidationFail(
+              ValidationFail(ForcedError, Some("int should fail")),
+              FieldC("int", None) :: Nil),
+            ScopedValidationFail(
+              ValidationFail(ForcedError, Some("string should fail")),
+              FieldC("string", None) :: Nil)).toString
         }
       }
     }
@@ -63,10 +67,10 @@ object PathReadersSpec extends SpecHelpers {
 
     val fields2 =
       ("int" ->> PathParam(Field[Int]()
-        .check("int should fail")(_ => false)
+        .check(ForcedError, "int should fail")(_ => false)
         .required(_ => "int path param is required!"))) ::
       ("string" ->> PathParam(Field[String]()
-        .check("string should fail")(_ => false)
+        .check(ForcedError, "string should fail")(_ => false)
         .required(_ => "string path param is required!"))) ::
       HNil
     val binder2 = bindFromRequest(fields2)

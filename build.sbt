@@ -61,7 +61,7 @@ javacOptions ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
 libraryDependencies ++= Seq (
   "org.scalaz" %% "scalaz-core" % "7.0.3",
   "org.typelevel" %% "shapeless-scalaz" % "0.2-SNAPSHOT" changing(),
-  "com.chuusai" % "shapeless_2.10.2" % "2.0.0-SNAPSHOT",
+  "com.chuusai" % "shapeless_2.10.2" % "2.0.0",
   "org.scalatra" %% "scalatra" % "2.3.0.M1",
   "org.scalatra" %% "scalatra-commands" % "2.3.0.M1",
   "org.scalatra" %% "scalatra-swagger"  % "2.3.0.M1",

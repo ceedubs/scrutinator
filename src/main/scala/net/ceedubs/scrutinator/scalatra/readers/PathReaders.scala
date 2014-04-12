@@ -13,34 +13,48 @@ trait PathReaders {
   import PathReaders._
   import Field._
 
-  implicit def pathNamedParamReader[A](implicit reader: ParamReader[ValidatedOption, (FieldKey, PathParams), A]): ParamReader[ValidatedOption, (NamedParam[PathParam[Field[A]]], Request), A] = {
-    ParamReader[ValidatedOption, (NamedParam[PathParam[Field[A]]], Request), A](Function.tupled { (namedParam, request) =>
-      val fieldKey = FieldKey(name = namedParam.name, prettyName = namedParam.param.prettyName) 
+  implicit def pathNamedParamReader[A](implicit reader: FieldReader[ValidatedOption, PathParams, A]): ParamReader[ValidatedOption, (NamedParam[PathParam[Field[A]]], Request), A] = {
+    ParamReader[ValidatedOption, (NamedParam[PathParam[Field[A]]], Request), A] { case (history, (namedParam, request)) =>
       val multiParams: Option[Map[String, Seq[String]]] = request.get(org.scalatra.MultiParamsKey).flatMap(x =>
         if (x.isInstanceOf[MultiParams]) Some(x.asInstanceOf[MultiParams]) else None)
       val params = new org.scalatra.util.MultiMapHeadView[String, String] {
         val multiMap = multiParams.getOrElse(Map.empty)
       }
-
       val pathParams = PathParams(params)
-      reader.reader((fieldKey, pathParams)).flatMap { maybeA =>
+      val fieldC = FieldC(name = namedParam.name, prettyName = namedParam.param.prettyName) 
+      reader.reader((history, (fieldC, pathParams))).flatMap { maybeA =>
         std.option.cata(maybeA)({ a =>
-          val errors = namedParam.param.validations.map(_.apply(fieldKey, a)
-            .map(e => ValidationError(e, FieldName(fieldKey.name)))).flatten
-          std.option.toFailure(std.list.toNel(errors))(Some(a))
+          val errors = namedParam.param.validations.
+            map(_.apply(fieldC, a).
+            map(ScopedValidationFail(_, fieldC :: history))).
+            flatten
+          std.option.toFailure(std.list.toNel(errors))(Option(a))
         }, Validation.success(None))
       }
-    })
+    }
   }
 
-  implicit val pathStringFieldReader: ParamReader[ValidatedOption, (FieldKey, PathParams), String] = {
-    val kleisli = Kleisli[ValidatedOption, (FieldKey, PathParams), String](Function.tupled(
-      (fieldKey, pathParams) =>
-        Validation.success(pathParams.get(fieldKey.name).filterNot(_.isEmpty))))
-    ParamReader.fromKleisli(kleisli)
- 
-  }
+  implicit val pathStringFieldReader: FieldReader[ValidatedOption, PathParams, String] =
+    FieldReader.reader[ValidatedOption, PathParams, String]((history, fieldC, pathParams) =>
+      Validation.success(pathParams.get(fieldC.name).filterNot(_.isEmpty)))
 
+  implicit val intPathReader: FieldReader[ValidatedOption, PathParams, Int] =
+    FieldReader.parseField("integer")(std.string.parseInt)
+
+  implicit val longPathReader: FieldReader[ValidatedOption, PathParams, Long] =
+    FieldReader.parseField("long")(std.string.parseLong)
+
+  implicit val bytePathReader: FieldReader[ValidatedOption, PathParams, Byte] =
+    FieldReader.parseField("byte")(std.string.parseByte)
+
+  implicit val doublePathReader: FieldReader[ValidatedOption, PathParams, Double] =
+    FieldReader.parseField("double")(std.string.parseDouble)
+
+  implicit val floatPathReader: FieldReader[ValidatedOption, PathParams, Float] =
+    FieldReader.parseField("float")(std.string.parseFloat)
+
+  implicit val shortPathReader: FieldReader[ValidatedOption, PathParams, Short] =
+    FieldReader.parseField("short")(std.string.parseShort)
 }
 
 object PathReaders extends PathReaders {

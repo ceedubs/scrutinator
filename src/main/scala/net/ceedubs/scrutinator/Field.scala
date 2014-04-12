@@ -14,8 +14,9 @@ final case class Field[A](
   prettyName: Option[String] = Field.Defaults.prettyName,
   validations: Field.ParamValidations[A] = Field.Defaults.validations[A]) {
 
-  def check(errorMsg: => String)(f: A => Boolean): Field[A] = {
-    val newValidation = (fieldKey: FieldKey, a: A) => if (f(a)) Nil else errorMsg :: Nil
+  def check(error: ParamError, errorMsg: => String)(f: A => Boolean): Field[A] = {
+    val newValidation = (_: Cursor, a: A) =>
+      if (f(a)) Nil else ValidationFail(error, Some(errorMsg)) :: Nil
     copy(validations = newValidation :: validations)
   }
 
@@ -29,7 +30,7 @@ final case class Fields[L <: HList](fields: L)
 
 object Field {
 
-  type ParamValidations[A] = List[Function2[FieldKey, A, List[String]]]
+  type ParamValidations[A] = List[Function2[FieldC, A, List[ValidationFail]]]
 
   object Defaults {
       val description: Option[String] = None
@@ -38,10 +39,6 @@ object Field {
       def validations[A]: ParamValidations[A] = Nil
   }
 
-}
-
-final case class FieldKey(name: String, prettyName: Option[String]) {
-  def displayName: String = prettyName.getOrElse(name)
 }
 
 final case class RequiredParam[A](

@@ -46,7 +46,7 @@ object ScrutinatorSwaggerSupportSpec extends SpecHelpers {
     val doStuffFields =
       ("queryInt" ->> QueryParam(Field[Int]())) ::
       ("headerString" ->> HeaderParam(Field[String]())) ::
-      //("pathLong" ->> Field.pathParam[Long]()) :: TODO support
+      //("pathLong" ->> PathParam(Field[Long]())) :: TODO support
       ("body" ->> JsonBody(SwaggerModel(
         modelId = "JsonBody",
         fields =

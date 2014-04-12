@@ -10,6 +10,7 @@ import scalaz.syntax.std.option._
 import javax.servlet.http.HttpServletRequest
 import scala.collection.JavaConverters._
 import org.scalatra.validation.{ FieldName, ValidationError }
+import ParamError._
 
 class NumberReadersSpec extends Spec with Mockito {
   import Field._
@@ -18,8 +19,8 @@ class NumberReadersSpec extends Spec with Mockito {
   def asParam(key: String, value: Option[Any]) =
     key -> value.map(a => Array(a.toString)).getOrElse(Array())
 
- "Integer param readers" should {
-    "successfully bind valid numbers" ! prop { (int: Option[Int], long: Option[Long],
+ "Number param readers" should {
+    "successfully bind valid numbers in the query string" ! prop { (int: Option[Int], long: Option[Long],
         byte: Option[Byte], double: Option[Double], float: Option[Float], short: Option[Short]) =>
 
       val mockRequest = mock[HttpServletRequest]
@@ -39,6 +40,37 @@ class NumberReadersSpec extends Spec with Mockito {
         ("float" ->> QueryParam(Field[Float]())) ::
         ("short" ->> QueryParam(Field[Short]())) ::
         HNil
+
+      RequestBinding.bindFromRequest(fields).run(mockRequest) must beLike {
+        case \/-(params) =>
+          int ==== params.get("int")
+          long ==== params.get("long")
+          byte ==== params.get("byte")
+          double ==== params.get("double")
+          float ==== params.get("float")
+          short ==== params.get("short")
+      }
+    }
+
+    "successfully bind valid numbers in headers" ! prop { (int: Option[Int], long: Option[Long],
+        byte: Option[Byte], double: Option[Double], float: Option[Float], short: Option[Short]) =>
+
+      val mockRequest = mock[HttpServletRequest]
+      mockRequest.getHeader("int") returns int.map(_.toString).orNull
+      mockRequest.getHeader("long") returns long.map(_.toString).orNull
+      mockRequest.getHeader("byte") returns byte.map(_.toString).orNull
+      mockRequest.getHeader("double") returns double.map(_.toString).orNull
+      mockRequest.getHeader("float") returns float.map(_.toString).orNull
+      mockRequest.getHeader("short") returns short.map(_.toString).orNull
+      val fields =
+        ("int" ->> HeaderParam(Field[Int]())) ::
+        ("long" ->> HeaderParam(Field[Long]())) ::
+        ("byte" ->> HeaderParam(Field[Byte]())) ::
+        ("double" ->> HeaderParam(Field[Double]())) ::
+        ("float" ->> HeaderParam(Field[Float]())) ::
+        ("short" ->> HeaderParam(Field[Short]())) ::
+        HNil
+
       RequestBinding.bindFromRequest(fields).run(mockRequest) must beLike {
         case \/-(params) =>
           int ==== params.get("int")
@@ -85,12 +117,24 @@ class NumberReadersSpec extends Spec with Mockito {
         result must beLike {
           case -\/(errors) =>
             errors ==== NonEmptyList(
-              ValidationError("my int must be a valid integer", FieldName("int")),
-              ValidationError("long must be a valid long", FieldName("long")),
-              ValidationError("my byte must be a valid byte", FieldName("byte")),
-              ValidationError("double must be a valid double", FieldName("double")),
-              ValidationError("float must be a valid float", FieldName("float")),
-              ValidationError("short must be a valid short", FieldName("short")))
+              ScopedValidationFail(
+                ValidationFail(InvalidFormat, Some("my int must be a valid integer")),
+                FieldC("int", Some("my int")) :: Nil),
+              ScopedValidationFail(
+                ValidationFail(InvalidFormat, Some("long must be a valid long")),
+                FieldC("long", None) :: Nil),
+              ScopedValidationFail(
+                ValidationFail(InvalidFormat, Some("my byte must be a valid byte")),
+                FieldC("byte", Some("my byte")) :: Nil),
+              ScopedValidationFail(
+                ValidationFail(InvalidFormat, Some("double must be a valid double")),
+                FieldC("double", None) :: Nil),
+              ScopedValidationFail(
+                ValidationFail(InvalidFormat, Some("float must be a valid float")),
+                FieldC("float", None) :: Nil),
+              ScopedValidationFail(
+                ValidationFail(InvalidFormat, Some("short must be a valid short")),
+                FieldC("short", None) :: Nil))
         }
       }
     }

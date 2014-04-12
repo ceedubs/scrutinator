@@ -3,8 +3,7 @@ package readers
 
 trait OptionalParamReaders {
 
-  implicit def optionalParamReader[I, A](implicit reader: ParamReader[ValidatedOption, I, A]): ParamReader[Validated, I, Option[A]] = {
-    ParamReader.fromKleisli(reader.reader.mapK[Validated, Option[A]](identity))
-  }
+  implicit def optionalParamReader[I, A](implicit reader: ParamReader[ValidatedOption, I, A]): ParamReader[Validated, I, Option[A]] =
+    reader.mapK[Validated, Option[A]](identity)
 
 }

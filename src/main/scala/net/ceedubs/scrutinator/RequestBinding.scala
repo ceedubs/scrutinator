@@ -7,6 +7,8 @@ import scalaz._
 object RequestBinding {
 
   def bindFromRequest[L <: HList](fields: L)(implicit fieldBinder: FieldBinder[L, Request]): Kleisli[ErrorsOr, Request, fieldBinder.R] =
-    fieldBinder(fields).mapK[ErrorsOr, fieldBinder.R](_.disjunction)
+    fieldBinder(fields).
+    local((req: Request) => (Nil, req)).
+    mapK[ErrorsOr, fieldBinder.R](_.disjunction)
 
 }

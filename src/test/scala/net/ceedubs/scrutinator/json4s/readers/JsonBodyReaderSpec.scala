@@ -11,6 +11,7 @@ import scalaz._
 import scalaz.syntax.std.option._
 import scala.collection.JavaConverters._
 import org.scalatra.validation.{ FieldName, ValidationError }
+import ParamError._
 
 class JsonBodyReaderSpec extends Spec {
   import Field._
@@ -120,12 +121,27 @@ class JsonBodyReaderSpec extends Spec {
         ("booleanList" -> intNel.list)
       val request = mockRequest(jsonBody = Some(compact(render(body))))
 
+      val expectedBooleanListErrors = (Traverse[NonEmptyList].mapAccumL(intNel, 0) { (index, x) =>
+        val error = ScopedValidationFail(
+          ValidationFail(InvalidFormat, Some(s"each element of ${booleanListField.prettyName.getOrElse("booleanList")} must be a valid boolean")),
+          IndexC(index) :: FieldC("booleanList", booleanListField.prettyName) :: Nil)
+        (index + 1, error)
+      })._2
+
+      val expectedOtherErrors = NonEmptyList(
+          ScopedValidationFail(
+            ValidationFail(InvalidFormat, Some(s"${stringField.prettyName.getOrElse("string")} must be a valid string")),
+            FieldC("string", stringField.prettyName) :: Nil),
+          ScopedValidationFail(
+            ValidationFail(InvalidFormat, Some(s"${doubleField.prettyName.getOrElse("double")} must be a valid double")),
+            FieldC("double", doubleField.prettyName) :: Nil),
+          ScopedValidationFail(
+            ValidationFail(InvalidFormat, Some(s"${intSetField.prettyName.getOrElse("intSet")} must be a valid JSON array")),
+            FieldC("intSet", intSetField.prettyName) :: Nil))
+
       RequestBinding.bindFromRequest(fields).run(request) must beLike {
-        case -\/(errors) => errors ==== NonEmptyList(
-          ValidationError(s"${stringField.prettyName.getOrElse("string")} does not have the proper format", FieldName("string")),
-          ValidationError(s"${doubleField.prettyName.getOrElse("double")} does not have the proper format", FieldName("double")),
-          ValidationError(s"${intSetField.prettyName.getOrElse("intSet")} does not have the proper format", FieldName("intSet")),
-          ValidationError(s"${booleanListField.prettyName.getOrElse("booleanList")} does not have the proper format", FieldName("booleanList")))
+        case -\/(errors) => errors ==== (expectedOtherErrors.append(expectedBooleanListErrors))
+
       }
     }
 
