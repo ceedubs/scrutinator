@@ -40,7 +40,11 @@ trait NamedParamConverter[K] {
 }
 
 object NamedParamConverter {
-  implicit def converter[K <: String, A](implicit w: Witness.Aux[K]): NamedParamConverter[K] = new NamedParamConverter[K] {
+  implicit def stringConverter[K <: String, A](implicit w: Witness.Aux[K]): NamedParamConverter[K] = new NamedParamConverter[K] {
     def asNamedParam[A](param: A) = NamedParam[A](w.value, param)
+  }
+
+  implicit def symbolConverter[K <: Symbol, A](implicit w: Witness.Aux[K]): NamedParamConverter[K] = new NamedParamConverter[K] {
+    def asNamedParam[A](param: A) = NamedParam[A](w.value.name, param)
   }
 }

@@ -25,18 +25,18 @@ class RequestBindingSpec extends Spec with Mockito {
       mockRequest.getHeader("second") returns second.orNull
       val fields =
         ("first" ->> QueryParam(Field[String]())) ::
-        ("second" ->> HeaderParam(Field[String]().check(InvalidFormat, "oops!")(_ => true))) ::
+        ('second ->> HeaderParam(Field[String]().check(InvalidFormat, "oops!")(_ => true))) ::
         HNil
 
       val results = RequestBinding.bindFromRequest(fields).run(mockRequest)
 
       typed[Errors \/ (Option[String], Option[String])](results.map(params =>
-        (params.get("first"), params.get("second"))))
+        (params.get("first"), params.get('second))))
 
       results must beLike {
         case \/-(params) =>
           first.flatMap(blankOption) ==== params.get("first")
-          second.flatMap(blankOption) ==== params.get("second")
+          second.flatMap(blankOption) ==== params.get('second)
       }
     }
 
@@ -90,14 +90,14 @@ class RequestBindingSpec extends Spec with Mockito {
         "first" -> first.map(s => Array(s)).getOrElse(Array())
       ).asJava
       val fields =
-        ("first" ->> QueryParam(Field[String]().required(p => s"Hey! '${p.name}' is a required field!"))) ::
+        ('first ->> QueryParam(Field[String]().required(p => s"Hey! '${p.name}' is a required field!"))) ::
         HNil
 
       val expected = first.filterNot(_.isEmpty).toRightDisjunction(NonEmptyList(
         ScopedValidationFail(
           ValidationFail(Required, Some("Hey! 'first' is a required field!")),
           FieldC("first", None) :: Nil)))
-      expected ==== RequestBinding.bindFromRequest(fields).run(mockRequest).map(_.get("first"))
+      expected ==== RequestBinding.bindFromRequest(fields).run(mockRequest).map(_.get('first))
 
     }
 
