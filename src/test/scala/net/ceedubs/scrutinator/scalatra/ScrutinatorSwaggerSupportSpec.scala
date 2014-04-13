@@ -4,12 +4,11 @@ package swagger
 import net.ceedubs.scrutinator.scalatra._
 import net.ceedubs.scrutinator.json4s._
 import org.scalatra._
-import org.scalatra.swagger._
 import org.scalatra.test.specs2._
+import org.scalatra.swagger.{ Model => SwaggerModel, _ }
 import shapeless._
 import shapeless.syntax.singleton._
 
-import org.scalatra.swagger.{ ApiInfo, Swagger, SwaggerSupport }
 import org.scalatra.test.specs2._
 import shapeless._
 import shapeless.syntax.singleton._
@@ -47,21 +46,23 @@ object ScrutinatorSwaggerSupportSpec extends SpecHelpers {
       ("queryInt" ->> QueryParam(Field[Int]())) ::
       ("headerString" ->> HeaderParam(Field[String]())) ::
       ("pathLong" ->> PathParam(Field[Long]())) ::
-      ("body" ->> JsonBody(SwaggerModel(
-        modelId = "JsonBody",
-        fields =
+      ("body" ->> JsonParam(ModelField(ModelWithId(
+        id = "JsonBody",
+        model = Model(
           ("string" ->> Field[String]()) ::
           ("double" ->> Field[Double]()) ::
-          ("boolean" ->> Field[Boolean]()) :: HNil))
+          ("boolean" ->> Field[Boolean]()) :: HNil,
+          description = Some("a description")))))
       ) :: HNil
     val doStuffOp = apiOperation[Unit]("doStuff")
       .summary("Do some stuff")
       .withParams(doStuffFields)
 
     val doStuffExpectedModels =  Map(
-      "JsonBody" -> Model(
+      "JsonBody" -> SwaggerModel(
         id = "JsonBody",
         name = "JsonBody",
+        description = Some("a description"),
         properties = List(
           "string" -> ModelProperty(
             `type` = DataType.String,

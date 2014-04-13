@@ -25,11 +25,11 @@ class JsonBodyReaderSpec extends Spec {
         requiredBoolean: Boolean, requiredBooleanField: RequiredParam[Field[Boolean]]) =>
 
       val fields =
-        ("body" ->> JsonBody(Fields(
+        ("body" ->> JsonParam(ModelField(Model(
           ("string" ->> stringField) ::
           ("boolean" ->> booleanField) ::
           ("stringWithDefault" ->> stringWithDefaultField) ::
-          ("requiredBoolean" ->> requiredBooleanField) :: HNil))
+          ("requiredBoolean" ->> requiredBooleanField) :: HNil)))
         ) :: HNil
 
       val body =
@@ -58,12 +58,12 @@ class JsonBodyReaderSpec extends Spec {
         short: Option[Short]) =>
 
       val fields =
-        ("body" ->> JsonBody(Fields(
+        ("body" ->> JsonParam(ModelField(Model(
           ("int" ->> intField) ::
           ("long" ->> Field[Long]()) ::
           ("double" ->> Field[Double]()) ::
           ("float" ->> Field[Float]()) ::
-          ("short" ->> Field[Short]()) :: HNil))
+          ("short" ->> Field[Short]()) :: HNil)))
         ) :: HNil
 
       val body =
@@ -83,9 +83,9 @@ class JsonBodyReaderSpec extends Spec {
 
     "successfully bind collections" ! prop { (stringSet: Option[Set[String]], doubleList: Option[List[Double]]) =>
       val fields =
-        ("body" ->> JsonBody(Fields(
+        ("body" ->> JsonParam(ModelField(Model(
           ("stringSet" ->> Field[Set[String]]()) ::
-          ("doubleList" ->> Field[List[Double]]()) :: HNil))
+          ("doubleList" ->> Field[List[Double]]()) :: HNil)))
         ) :: HNil
       val body =
         ("stringSet" -> stringSet) ~
@@ -106,12 +106,12 @@ class JsonBodyReaderSpec extends Spec {
         booleanListField: Field[List[Boolean]], intNel: NonEmptyList[Int]) =>
 
       val fields =
-        ("body" ->> JsonBody(Fields(
+        ("body" ->> JsonParam(ModelField(Model(
           ("string" ->> stringField) ::
           ("double" ->> doubleField) ::
           ("intSet" ->> intSetField) ::
           ("booleanList" ->> booleanListField) ::
-          HNil))
+          HNil)))
         ) :: HNil
 
       val body =
@@ -152,12 +152,12 @@ class JsonBodyReaderSpec extends Spec {
         requiredBoolean: Boolean, requiredBooleanField: RequiredParam[Field[Boolean]]) =>
 
       val fields =
-        ("body" ->> JsonBody(Fields(
+        ("body" ->> JsonParam(ModelField(Model(
           ("string" ->> stringField) ::
-          ("foo" ->> Fields(
+          ("foo" ->> ModelField(Model(
             ("boolean" ->> booleanField) ::
-            ("stringWithDefault" ->> stringWithDefaultField) :: HNil)) ::
-          ("requiredBoolean" ->> requiredBooleanField) :: HNil))
+            ("stringWithDefault" ->> stringWithDefaultField) :: HNil))) ::
+          ("requiredBoolean" ->> requiredBooleanField) :: HNil)))
         ) :: HNil
 
       val body =

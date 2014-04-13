@@ -17,7 +17,7 @@ package object scrutinator {
   type QueryParam[A] = ParamFromSource[A, QueryString]
   type HeaderParam[A] = ParamFromSource[A, Headers]
   type PathParam[A] = ParamFromSource[A, Path]
-  type JsonBody[A] = ParamFromSource[A, Json]
+  type JsonParam[A] = ParamFromSource[A, Json]
 
   /**
    * Tracks the position of a parameter.

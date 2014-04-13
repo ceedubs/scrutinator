@@ -19,9 +19,13 @@ object PathParam {
   def apply[A](param: A): PathParam[A] = ParamFromSource[A, Path](param)
 }
 
-object JsonBody {
-  def apply[A](param: A): JsonBody[A] = ParamFromSource[A, Json](param)
+object JsonParam {
+  def apply[A](param: A): JsonParam[A] = ParamFromSource[A, Json](param)
 }
+
+final case class RequiredParam[A](
+  param: A,
+  errorMsg: NamedParam[A] => String)
 
 trait ValueSource
 

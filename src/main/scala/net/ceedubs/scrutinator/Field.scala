@@ -26,8 +26,6 @@ final case class Field[A](
 
 }
 
-final case class Fields[L <: HList](fields: L)
-
 object Field {
 
   type ParamValidations[A] = List[Function2[FieldC, A, List[ValidationFail]]]
@@ -41,10 +39,12 @@ object Field {
 
 }
 
-final case class RequiredParam[A](
-  param: A,
-  errorMsg: NamedParam[A] => String)
-
 final case class FieldWithDefault[A](
   param: Field[A],
   default: A)
+
+final case class ModelField[M](
+  model: M,
+  description: Option[String] = Field.Defaults.description,
+  notes: Option[String] = Field.Defaults.notes,
+  prettyName: Option[String] = Field.Defaults.prettyName)

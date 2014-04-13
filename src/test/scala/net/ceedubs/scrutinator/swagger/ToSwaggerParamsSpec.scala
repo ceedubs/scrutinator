@@ -12,19 +12,21 @@ class ToSwaggerParamsSpec extends Spec {
   import ValueSource._
 
   "Swagger parameter conversion" should {
-    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Field[Int]], stringHeaderParam: HeaderParam[RequiredParam[Field[String]]], longQueryParam: QueryParam[FieldWithDefault[Long]], doublePathParam: PathParam[RequiredParam[Field[Double]]], intJsonParam: Field[Int], stringJsonParam: Field[String], longJsonParam: Field[Long]) =>
+    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Field[Int]], stringHeaderParam: HeaderParam[RequiredParam[Field[String]]], longQueryParam: QueryParam[FieldWithDefault[Long]], doublePathParam: PathParam[RequiredParam[Field[Double]]], intJsonParam: Field[Int], stringJsonParam: Field[String], longJsonParam: Field[Long], description: Option[String]) =>
 
       val fields =
         ("queryInt" ->> intQueryParam) ::
         ("headerString" ->> stringHeaderParam) ::
         ("queryLong" ->> longQueryParam) ::
         ("pathDouble" ->> doublePathParam) ::
-        ("body" ->> JsonBody(SwaggerModel(
-          modelId = "JsonBody",
-          fields =
-            ("jsonInt" ->> intJsonParam) ::
-            ("jsonString" ->> stringJsonParam) ::
-            ("jsonLong" ->> longJsonParam) :: HNil))) ::
+        ("body" ->> JsonParam(ModelField(
+          model = ModelWithId(
+            id  = "JsonBody",
+            model  = Model(
+              ("jsonInt" ->> intJsonParam) ::
+              ("jsonString" ->> stringJsonParam) ::
+              ("jsonLong" ->> longJsonParam) :: HNil,
+            description = description))))) ::
         HNil
 
       val expectedParams = Seq(
@@ -77,12 +79,13 @@ class ToSwaggerParamsSpec extends Spec {
 
       def convertModel[A](param: A)(implicit converter: SwaggerModelConverter[A]) = converter(param)
       // code duplicated as a workaround for compiler crash
-      val bodyModel = SwaggerModel(
-          modelId = "JsonBody",
-          fields =
+      val bodyModel = ModelWithId(
+          id = "JsonBody",
+          model = Model(
             ("jsonInt" ->> intJsonParam) ::
             ("jsonString" ->> stringJsonParam) ::
-            ("jsonLong" ->> longJsonParam) :: HNil)
+            ("jsonLong" ->> longJsonParam) :: HNil,
+            description = description))
       val expectedModels = Map(
         ModelId("JsonBody") -> convertModel(bodyModel).eval(Map.empty))
       (expectedModels, expectedParams) ==== FieldListSwaggerConverter.toSwaggerParams(fields).apply(Map.empty)

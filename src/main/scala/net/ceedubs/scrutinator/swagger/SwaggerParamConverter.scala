@@ -10,8 +10,6 @@ import shapeless.contrib.scalaz._
 import shapeless.ops.hlist.ToList
 import shapeless.record._
 
-final case class SwaggerModel[L <: HList](modelId: String, fields: L)
-
 trait SwaggerDataTypeConverter[A] {
   def dataType: DataType
 }
@@ -95,15 +93,16 @@ trait NamedParamConverters {
     }
   }
 
-  implicit def swaggerModelParamConverter[L <: HList, S <: ValueSource](implicit modelConverter: SwaggerModelConverter[SwaggerModel[L]], sourceConverter: SwaggerSourceConverter[S]): SwaggerParamConverter[NamedParam[ParamFromSource[SwaggerModel[L], S]]] =
-    SwaggerParamConverter[NamedParam[ParamFromSource[SwaggerModel[L], S]]]{ namedParam =>
+  implicit def modelFieldParamConverter[L <: HList, S <: ValueSource](implicit modelConverter: SwaggerModelConverter[ModelWithId[L]], sourceConverter: SwaggerSourceConverter[S]): SwaggerParamConverter[NamedParam[ParamFromSource[ModelField[ModelWithId[L]], S]]] =
+    SwaggerParamConverter[NamedParam[ParamFromSource[ModelField[ModelWithId[L]], S]]]{ namedParam =>
+      val param = namedParam.param
       for {
-        model <- modelConverter(namedParam.param)
+        model <- modelConverter(param.model)
       } yield Parameter(
         name = namedParam.name,
         `type` = DataType(model.id),
-        description = None, // TODO
-        notes = None, // TODO
+        description = param.description,
+        notes = param.notes,
         paramType = sourceConverter.sourceType,
         defaultValue = None,
         allowableValues = AllowableValues.AnyValue, // TODO
