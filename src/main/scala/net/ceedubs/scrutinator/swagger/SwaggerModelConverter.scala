@@ -72,7 +72,7 @@ trait FieldModelPropertyConverters {
         ModelProperty(
           `type` = dataTypeConverter.dataType,
           required = false,
-          description = None /* TODO */)))
+          description = namedParam.param.description)))
 
   implicit def requiredFieldModelPropertyConverter[A](implicit converter: SwaggerModelPropertyConverter[NamedParam[Field[A]]]): SwaggerModelPropertyConverter[NamedParam[RequiredParam[Field[A]]]] =
     SwaggerModelPropertyConverter[NamedParam[RequiredParam[Field[A]]]] { namedParam =>

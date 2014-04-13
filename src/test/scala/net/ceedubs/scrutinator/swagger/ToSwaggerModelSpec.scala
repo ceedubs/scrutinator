@@ -24,15 +24,15 @@ class ToSwaggerModelSpec extends Spec {
           "jsonInt" -> ModelProperty(
             `type` = DataType.Int,
             required = false,
-            description = None),
+            description = intJsonParam.description),
           "requiredJsonString" -> ModelProperty(
             `type` = DataType.String,
             required = true,
-            description = None),
+            description = requiredStringJsonParam.param.description),
           "jsonLong" -> ModelProperty(
             `type` = DataType.Long,
             required = false,
-            description = None)))
+            description = longJsonParam.description)))
 
       def convert[A](param: A)(implicit converter: SwaggerModelConverter[A]) = converter(param)
 
