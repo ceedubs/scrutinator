@@ -12,7 +12,7 @@ trait ParamError
 
 object ParamError {
   case object InvalidFormat extends ParamError
-  case object InvalidSize extends ParamError
+  case object OutsideRange extends ParamError
   case object Required extends ParamError
 }
 
