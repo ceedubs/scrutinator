@@ -26,6 +26,12 @@ abstract class Spec extends Specification
 
         override def read(): Int = inputStream.read()
 
+        override def isReady(): Boolean = true
+
+        override def isFinished(): Boolean = inputStream.available == 0
+
+        override def setReadListener(x: javax.servlet.ReadListener) {}
+
         override def close() {
           super.close()
           inputStream.close()
