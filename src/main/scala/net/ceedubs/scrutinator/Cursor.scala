@@ -17,10 +17,10 @@ final case class IndexC(i: Int) extends Cursor
 object CursorHistory {
   def fieldName(c: CursorHistory): Option[String] = c match {
     case (h :: t) =>
-      val first = h.fold(_.name, i => s"[$i]")
+      val first = h.fold(_.name, i => s"[${i.i}]")
       val rest = t.map(_.fold(
         f => s".${f.name}",
-        i => s"[$i.i]"))
+        i => s"[${i.i}]"))
       Some((first :: rest).mkString)
     case _ => None
   }
