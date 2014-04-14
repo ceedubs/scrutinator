@@ -20,7 +20,7 @@ final case class Field[A](
     copy(validations = newValidation :: validations)
   }
 
-  def required(errorMsg: NamedParam[Field[A]] => String): RequiredParam[Field[A]] = RequiredParam(this, errorMsg)
+  def required(errorMsg: NamedParam[Field[A]] => String = Field.Defaults.requiredErrorMsg): RequiredParam[Field[A]] = RequiredParam(this, errorMsg)
 
   def withDefault(default: A): FieldWithDefault[A] = FieldWithDefault(this, default)
 
@@ -31,10 +31,12 @@ object Field {
   type ParamValidations[A] = List[Function2[FieldC, A, List[ValidationFail]]]
 
   object Defaults {
-      val description: Option[String] = None
-      val notes: Option[String] = None
-      val prettyName: Option[String] = None
-      def validations[A]: ParamValidations[A] = Nil
+    val description: Option[String] = None
+    val notes: Option[String] = None
+    val prettyName: Option[String] = None
+    def validations[A]: ParamValidations[A] = Nil
+    def requiredErrorMsg[A](n: NamedParam[Field[A]]): String =
+      s"${n.param.prettyName.getOrElse(n.name)} is required"
   }
 
 }
