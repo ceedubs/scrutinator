@@ -80,6 +80,15 @@ trait FieldModelPropertyConverters {
       converter(nestedNamedParam).map(_.copy(required = true))
     }
 
+  implicit def modelModelPropertyConverter[L <: HList](implicit modelConverter: SwaggerModelConverter[ModelWithId[L]]): ModelWithIdPropertyConverter[NamedParam[ModelField[ModelWithId[L]]]] =
+    ModelWithIdPropertyConverter[NamedParam[ModelField[ModelWithId[L]]]](namedParam =>
+      modelConverter(namedParam.param.model).
+      map(model =>
+        ModelProperty(
+          `type` = DataType(model.id),
+          required = false,
+          description = namedParam.param.description)))
+
 }
 
 object ModelState {
