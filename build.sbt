@@ -64,11 +64,11 @@ libraryDependencies ++= Seq (
   "com.chuusai" % "shapeless_2.10.2" % "2.0.0",
   "org.scalatra" %% "scalatra" % "2.3.0.RC1",
   "org.scalatra" %% "scalatra-commands" % "2.3.0.RC1",
-  "org.scalatra" %% "scalatra-swagger"  % "2.3.0.RC1",
-  "org.scalatra" %% "scalatra-specs2"  % "2.3.0.RC1" % "test",
-  "javax.servlet"          % "javax.servlet-api"  % "3.1.0",
-  "org.specs2"     %% "specs2"         % "2.3.1"    % "test",
-  "org.scalacheck" %% "scalacheck"     % "1.10.1"   % "test",
+  "org.scalatra" %% "scalatra-swagger" % "2.3.0.RC1",
+  "org.scalatra" %% "scalatra-specs2" % "2.3.0.RC1" % "test",
+  "javax.servlet" % "javax.servlet-api" % "3.1.0",
+  "org.specs2" %% "specs2" % "2.3.1" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.10.1" % "test",
   "org.json4s" %% "json4s-jackson" % "3.2.7"
 )
 
