@@ -56,7 +56,7 @@ object PathReadersSpec extends SpecHelpers {
       ("int" ->> PathParam(Field[Int]().required(_ => "int path param is required!"))) ::
       ("string" ->> PathParam(Field[String]().required(_ => "string path param is required!"))) ::
       HNil
-    val binder1 = bindFromRequest(fields1)
+    val binder1 = fieldBinder(fields1)
     get("/test1/:int/:string") {
       binder1.run(request).map { params =>
         typed[Int](params.get("int"))
@@ -73,7 +73,7 @@ object PathReadersSpec extends SpecHelpers {
         .check(ForcedError, "string should fail")(_ => false)
         .required(_ => "string path param is required!"))) ::
       HNil
-    val binder2 = bindFromRequest(fields2)
+    val binder2 = fieldBinder(fields2)
     get("/test2/:int/:string") {
       binder2.run(request).map { params =>
         typed[Int](params.get("int"))

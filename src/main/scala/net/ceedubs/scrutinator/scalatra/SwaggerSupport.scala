@@ -1,6 +1,7 @@
 package net.ceedubs.scrutinator
-package swagger
+package scalatra
 
+import net.ceedubs.scrutinator.swagger._
 import shapeless._
 import org.scalatra.swagger.{ SwaggerSupport, SwaggerSupportSyntax }
 import org.scalatra.swagger.SwaggerSupportSyntax.SwaggerOperationBuilder

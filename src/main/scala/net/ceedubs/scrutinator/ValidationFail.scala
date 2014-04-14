@@ -4,7 +4,9 @@ import scalaz._
 
 final case class ValidationFail(error: ParamError, msg: Option[String])
 
-final case class ScopedValidationFail(failure: ValidationFail, scope: CursorHistory)
+final case class ScopedValidationFail(failure: ValidationFail, scope: CursorHistory) {
+  def fieldName: Option[String] = CursorHistory.fieldName(scope)
+}
 
 trait ParamError
 

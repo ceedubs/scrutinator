@@ -39,7 +39,7 @@ class JsonBodyReaderSpec extends Spec {
         ("requiredBoolean" -> requiredBoolean)
       val request = mockRequest(jsonBody = Some(compact(render(body))))
 
-      val results = RequestBinding.bindFromRequest(fields).run(request).map { params =>
+      val results = RequestBinding.fieldBinder(fields).run(request).map { params =>
         val body = params.get("body")
         (body.get("string"), body.get("boolean"), body.get("stringWithDefault"), body.get("requiredBoolean"))
       }
@@ -74,7 +74,7 @@ class JsonBodyReaderSpec extends Spec {
         ("short" -> short.map(_.toInt))
       val request = mockRequest(jsonBody = Some(compact(render(body))))
 
-      val results = RequestBinding.bindFromRequest(fields).run(request).map { params =>
+      val results = RequestBinding.fieldBinder(fields).run(request).map { params =>
         val body = params.get("body")
         (body.get("int"), body.get("long"), body.get("double"), body.get("float"), body.get("short"))
       }
@@ -92,7 +92,7 @@ class JsonBodyReaderSpec extends Spec {
         ("doubleList" -> doubleList)
       val request = mockRequest(jsonBody = Some(compact(render(body))))
 
-      val results = RequestBinding.bindFromRequest(fields).run(request).map { params =>
+      val results = RequestBinding.fieldBinder(fields).run(request).map { params =>
         val body = params.get("body")
         (body.get("stringSet"), body.get("doubleList"))
       }
@@ -139,7 +139,7 @@ class JsonBodyReaderSpec extends Spec {
             ValidationFail(InvalidFormat, Some(s"${intSetField.prettyName.getOrElse("intSet")} must be a valid JSON array")),
             FieldC("intSet", intSetField.prettyName) :: Nil))
 
-      RequestBinding.bindFromRequest(fields).run(request) must beLike {
+      RequestBinding.fieldBinder(fields).run(request) must beLike {
         case -\/(errors) => errors ==== (expectedOtherErrors.append(expectedBooleanListErrors))
 
       }
@@ -168,7 +168,7 @@ class JsonBodyReaderSpec extends Spec {
         ("requiredBoolean" -> requiredBoolean)
       val request = mockRequest(jsonBody = Some(compact(render(body))))
 
-      val results = RequestBinding.bindFromRequest(fields).run(request).map { params =>
+      val results = RequestBinding.fieldBinder(fields).run(request).map { params =>
         val body = params.get("body")
         val foo = body.get("foo")
         (body.get("string"), foo.get("boolean"), foo.get("stringWithDefault"), body.get("requiredBoolean"))
