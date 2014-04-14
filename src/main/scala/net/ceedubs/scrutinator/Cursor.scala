@@ -15,7 +15,7 @@ final case class FieldC(name: String, prettyName: Option[String]) extends Cursor
 final case class IndexC(i: Int) extends Cursor
 
 object CursorHistory {
-  def fieldName(c: CursorHistory): Option[String] = c match {
+  def fieldName(c: CursorHistory): Option[String] = c.reverse match {
     case (h :: t) =>
       val first = h.fold(_.name, i => s"[${i.i}]")
       val rest = t.map(_.fold(
