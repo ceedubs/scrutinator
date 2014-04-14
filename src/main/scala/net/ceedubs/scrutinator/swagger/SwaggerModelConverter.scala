@@ -74,8 +74,8 @@ trait FieldModelPropertyConverters {
           required = false,
           description = namedParam.param.description)))
 
-  implicit def requiredFieldModelPropertyConverter[A](implicit converter: ModelWithIdPropertyConverter[NamedParam[Field[A]]]): ModelWithIdPropertyConverter[NamedParam[RequiredParam[Field[A]]]] =
-    ModelWithIdPropertyConverter[NamedParam[RequiredParam[Field[A]]]] { namedParam =>
+  implicit def requiredFieldModelPropertyConverter[P](implicit converter: ModelWithIdPropertyConverter[NamedParam[P]]): ModelWithIdPropertyConverter[NamedParam[RequiredParam[P]]] =
+    ModelWithIdPropertyConverter[NamedParam[RequiredParam[P]]] { namedParam =>
       val nestedNamedParam = NamedParam(namedParam.name, namedParam.param.param)
       converter(nestedNamedParam).map(_.copy(required = true))
     }

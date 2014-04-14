@@ -37,6 +37,8 @@ object Field {
     def validations[A]: ParamValidations[A] = Nil
     def requiredErrorMsg[A](n: NamedParam[Field[A]]): String =
       s"${n.param.prettyName.getOrElse(n.name)} is required"
+    def requiredModelErrorMsg[M](n: NamedParam[ModelField[M]]): String =
+      s"${n.param.prettyName.getOrElse(n.name)} is required"
   }
 
 }
@@ -46,7 +48,11 @@ final case class FieldWithDefault[A](
   default: A)
 
 final case class ModelField[M](
-  model: M,
-  description: Option[String] = Field.Defaults.description,
-  notes: Option[String] = Field.Defaults.notes,
-  prettyName: Option[String] = Field.Defaults.prettyName)
+    model: M,
+    description: Option[String] = Field.Defaults.description,
+    notes: Option[String] = Field.Defaults.notes,
+    prettyName: Option[String] = Field.Defaults.prettyName) {
+
+  def required(errorMsg: NamedParam[ModelField[M]] => String = Field.Defaults.requiredModelErrorMsg): RequiredParam[ModelField[M]] = RequiredParam(this, errorMsg)
+
+}
