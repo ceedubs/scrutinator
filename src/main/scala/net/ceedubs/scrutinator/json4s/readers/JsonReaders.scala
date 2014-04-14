@@ -99,12 +99,18 @@ trait JsonReaders {
 
   implicit def jsonBodyFieldBinder[L <: HList](implicit strategy: FieldBindingStrategy[L, JValue, bindJsonFields.type]): FieldBinder.Aux[L, JValue, strategy.R] = strategy.fieldBinder
 
-  implicit def nestedJsonObjectReader[M, L <: HList](implicit asModel: AsModel.Aux[M, L], binder: FieldBinder[L, JValue]): ParamReader[Validated, (NamedParam[ModelField[M]], JValue), binder.R] =
-    ParamReader[Validated, (NamedParam[ModelField[M]], JValue), binder.R] { case (history, (namedParam, jValue)) =>
-      binder(asModel(namedParam.param.model).fields).run((
-        FieldC(namedParam.name, namedParam.param.prettyName) :: history,
-        jValue \ namedParam.name))
+  implicit def nestedJsonObjectReader[M, L <: HList](implicit asModel: AsModel.Aux[M, L], binder: FieldBinder[L, JValue]): ParamReader[ValidatedOption, (NamedParam[ModelField[M]], JValue), binder.R] =
+    ParamReader[ValidatedOption, (NamedParam[ModelField[M]], JValue), binder.R] { case (history, (namedParam, jValue)) => {
+      val fieldC = FieldC(namedParam.name, namedParam.param.prettyName)
+      val updatedHistory = fieldC :: history
+      (jValue \ namedParam.name) match {
+        case j: JObject => binder(asModel(namedParam.param.model).fields).map(Some(_)).run((
+          updatedHistory, j))
+        case JNothing | JNull => Validation.success(None)
+        case x => invalidFormat(updatedHistory, "JSON object")
+      }
     }
+  }
 
   implicit def jsonRequestBodyReader[M, L <: HList](implicit asModel: AsModel.Aux[M, L], binder: FieldBinder[L, JValue]): ParamReader[Validated, (NamedParam[JsonParam[ModelField[M]]], Request), binder.R] =
     ParamReader[Validated, (NamedParam[JsonParam[ModelField[M]]], Request), binder.R] { case (history, (namedParam, request)) =>

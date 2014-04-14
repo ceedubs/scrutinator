@@ -171,12 +171,12 @@ class JsonBodyReaderSpec extends Spec {
       val results = RequestBinding.fieldBinder(fields).run(request).map { params =>
         val body = params.get("body")
         val foo = body.get("foo")
-        (body.get("string"), foo.get("boolean"), foo.get("stringWithDefault"), body.get("requiredBoolean"))
+        (body.get("string"), foo.flatMap(_.get("boolean")), foo.map(_.get("stringWithDefault")), body.get("requiredBoolean"))
       }
-      \/.right[Errors, (Option[String], Option[Boolean], String, Boolean)]((
+      \/.right[Errors, (Option[String], Option[Boolean], Option[String], Boolean)]((
         string,
         boolean,
-        stringWithDefault.getOrElse(stringWithDefaultField.default),
+        Some(stringWithDefault.getOrElse(stringWithDefaultField.default)),
         requiredBoolean)) ==== results
     }
   }
