@@ -54,8 +54,6 @@ trait HeaderReaders {
 object HeaderReaders extends HeaderReaders {
   import ValueSource.Headers
 
-  type HeaderParams = Map[String, String] @@ Headers
-
   object HeaderParams {
     val tagger: Tagger[Headers] = tag[Headers]
     def apply(params: Map[String, String]): HeaderParams = tagger[Map[String, String]](params)

@@ -51,8 +51,6 @@ trait QueryStringReaders {
 object QueryStringReaders extends QueryStringReaders {
   import ValueSource.QueryString
 
-  type QueryStringParams = Map[String, Seq[String]] @@ QueryString
-
   object QueryStringParams {
     val tagger: Tagger[QueryString] = tag[QueryString]
     def apply(params: Map[String, Seq[String]]): QueryStringParams = tagger[Map[String, Seq[String]]](params)

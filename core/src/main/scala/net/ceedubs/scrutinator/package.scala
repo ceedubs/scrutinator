@@ -27,5 +27,9 @@ package object scrutinator {
    */
   type CursorHistory = List[Cursor]
 
+
+  type QueryStringParams = Map[String, Seq[String]] @@ QueryString
+  type HeaderParams = Map[String, String] @@ Headers
+
   implicit def reqToRichReq: Request => RichRequest = RichRequest.apply
 }
