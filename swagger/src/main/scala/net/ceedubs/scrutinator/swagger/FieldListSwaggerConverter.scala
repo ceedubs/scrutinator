@@ -7,7 +7,6 @@ import shapeless._
 import shapeless.contrib.scalaz._
 import shapeless.ops.hlist.ToList
 import shapeless.record._
-//import org.scalatra.swagger.{ AllowableValues, DataType, Parameter }
 import org.scalatra.swagger.Parameter
 
 trait FieldListSwaggerConverter[L <: HList] {
