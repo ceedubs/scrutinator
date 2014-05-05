@@ -88,6 +88,15 @@ trait FieldModelPropertyConverters {
           required = false,
           description = namedParam.param.description)))
 
+  implicit def modelCollectionModelPropertyConverter[L <: HList](implicit modelConverter: SwaggerModelConverter[ModelWithId[L]]): ModelWithIdPropertyConverter[NamedParam[ModelCollectionField[List, ModelWithId[L]]]] =
+    ModelWithIdPropertyConverter[NamedParam[ModelCollectionField[List, ModelWithId[L]]]](namedParam =>
+      modelConverter(namedParam.param.model).
+      map(model =>
+        ModelProperty(
+          `type` = DataType.GenList(DataType(model.id)),
+          required = false,
+          description = namedParam.param.description)))
+
 }
 
 object ModelState {

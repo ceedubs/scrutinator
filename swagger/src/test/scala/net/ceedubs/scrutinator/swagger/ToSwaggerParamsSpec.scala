@@ -23,8 +23,11 @@ class ToSwaggerParamsSpec extends Spec {
             id  = "JsonBody",
             model  = Model(
               ("jsonInt" ->> intJsonParam) ::
-              ("jsonString" ->> stringJsonParam) ::
-              ("jsonLong" ->> longJsonParam) :: HNil,
+              ("jsonNestedObject" ->> CollectionField[List].ofModel(ModelWithId(
+                id = "JsonNestedObject",
+                model = Model(
+                  ("jsonString" ->> stringJsonParam) ::
+                  ("jsonLong" ->> longJsonParam) :: HNil)))) :: HNil,
             description = description))))) ::
         HNil
 
@@ -78,15 +81,24 @@ class ToSwaggerParamsSpec extends Spec {
 
       def convertModel[A](param: A)(implicit converter: SwaggerModelConverter[A]) = converter(param)
       // code duplicated as a workaround for compiler crash
+      val nestedObjectModel = ModelWithId(
+        id = "JsonNestedObject",
+        model = Model(
+          ("jsonString" ->> stringJsonParam) ::
+          ("jsonLong" ->> longJsonParam) :: HNil))
       val bodyModel = ModelWithId(
-          id = "JsonBody",
-          model = Model(
-            ("jsonInt" ->> intJsonParam) ::
-            ("jsonString" ->> stringJsonParam) ::
-            ("jsonLong" ->> longJsonParam) :: HNil,
-            description = description))
+        id  = "JsonBody",
+        model  = Model(
+          ("jsonInt" ->> intJsonParam) ::
+          ("jsonNestedObject" ->> CollectionField[List].ofModel(ModelWithId(
+            id = "JsonNestedObject",
+            model = Model(
+              ("jsonString" ->> stringJsonParam) ::
+              ("jsonLong" ->> longJsonParam) :: HNil)))) :: HNil,
+        description = description))
       val expectedModels = Map(
-        ModelId("JsonBody") -> convertModel(bodyModel).eval(Map.empty))
+        ModelId("JsonBody") -> convertModel(bodyModel).eval(Map.empty),
+        ModelId("JsonNestedObject") -> convertModel(nestedObjectModel).eval(Map.empty))
       (expectedModels, expectedParams) ==== FieldListSwaggerConverter.toSwaggerParams(fields).apply(Map.empty)
     }
   }

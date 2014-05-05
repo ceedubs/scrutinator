@@ -47,6 +47,21 @@ trait NamedParamConverters {
         required = false)
     }
 
+  implicit def modelCollectionFieldParamConverter[L <: HList, S <: ValueSource](implicit modelConverter: SwaggerModelConverter[ModelWithId[L]], sourceConverter: SwaggerSourceConverter[S]): SwaggerParamConverter[NamedParam[ParamFromSource[ModelCollectionField[List, ModelWithId[L]], S]]] =
+    SwaggerParamConverter[NamedParam[ParamFromSource[ModelCollectionField[List, ModelWithId[L]], S]]]{ namedParam =>
+      val param = namedParam.param
+      for {
+        model <- modelConverter(param.model)
+      } yield Parameter(
+        name = namedParam.name,
+        `type` = DataType.GenList(DataType(model.id)),
+        description = param.description,
+        notes = param.notes,
+        paramType = sourceConverter.sourceType,
+        defaultValue = None,
+        allowableValues = AllowableValues.AnyValue, // TODO
+        required = false)
+    }
 }
 
 trait RequiredParamConverters {
