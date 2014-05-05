@@ -65,7 +65,7 @@ trait SwaggerModelConverters {
 }
 
 trait FieldModelPropertyConverters {
-  implicit def fieldModelPropertyConverter[A](implicit dataTypeConverter: SwaggerDataTypeConverter[A]): ModelWithIdPropertyConverter[NamedParam[Field[A]]] =
+  implicit def fieldModelPropertyConverter[A](implicit dataTypeConverter: SwaggerCoreDataTypeConverter[A]): ModelWithIdPropertyConverter[NamedParam[Field[A]]] =
     ModelWithIdPropertyConverter[NamedParam[Field[A]]](namedParam =>
       State.state(
         ModelProperty(
