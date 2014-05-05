@@ -18,7 +18,7 @@ class ToSwaggerModelSpec extends Spec {
             ("nestedModelCollection" ->> CollectionField[List].ofModel(ModelWithId(
               id = "NestedModel",
               model = Model(
-               // ("booleanWithDefault" ->> booleanWithDefaultField) ::
+                ("booleanWithDefault" ->> booleanWithDefaultField) ::
                 ("float" ->> floatField) ::
                 HNil)))) ::
             HNil,
@@ -29,6 +29,10 @@ class ToSwaggerModelSpec extends Spec {
         name = "NestedModel",
         description = None,
         properties = List(
+          "booleanWithDefault" -> ModelProperty(
+            `type` = DataType.Boolean,
+            required = false,
+            description = booleanWithDefaultField.param.description),
           "float" -> ModelProperty(
             `type` = DataType.Float,
             required = false,

@@ -79,6 +79,12 @@ trait FieldModelPropertyConverters {
       converter(nestedNamedParam).map(_.copy(required = true))
     }
 
+  implicit def fieldWithDefaultModelPropertyConverter[A](implicit converter: ModelWithIdPropertyConverter[NamedParam[Field[A]]]): ModelWithIdPropertyConverter[NamedParam[FieldWithDefault[A]]] =
+    ModelWithIdPropertyConverter[NamedParam[FieldWithDefault[A]]] { namedParam =>
+      val nestedNamedParam = NamedParam(namedParam.name, namedParam.param.param)
+      converter(nestedNamedParam)
+    }
+
   implicit def modelModelPropertyConverter[L <: HList](implicit modelConverter: SwaggerModelConverter[ModelWithId[L]]): ModelWithIdPropertyConverter[NamedParam[ModelField[ModelWithId[L]]]] =
     ModelWithIdPropertyConverter[NamedParam[ModelField[ModelWithId[L]]]](namedParam =>
       modelConverter(namedParam.param.model).
