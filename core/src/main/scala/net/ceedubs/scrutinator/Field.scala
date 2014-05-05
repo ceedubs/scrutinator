@@ -39,6 +39,8 @@ object Field {
       s"${n.param.prettyName.getOrElse(n.name)} is required"
     def requiredModelErrorMsg[M](n: NamedParam[ModelField[M]]): String =
       s"${n.param.prettyName.getOrElse(n.name)} is required"
+    def requiredModelCollectionErrorMsg[C[_], M](n: NamedParam[ModelCollectionField[C, M]]): String =
+      s"${n.param.prettyName.getOrElse(n.name)} is required"
   }
 
 }
@@ -55,4 +57,27 @@ final case class ModelField[M](
 
   def required(errorMsg: NamedParam[ModelField[M]] => String = Field.Defaults.requiredModelErrorMsg): RequiredParam[ModelField[M]] = RequiredParam(this, errorMsg)
 
+}
+
+final case class ModelCollectionField[C[_], M](
+    model: M,
+    description: Option[String] = Field.Defaults.description,
+    notes: Option[String] = Field.Defaults.notes,
+    prettyName: Option[String] = Field.Defaults.prettyName) {
+
+  def required(errorMsg: NamedParam[ModelCollectionField[C, M]] => String = Field.Defaults.requiredModelCollectionErrorMsg): RequiredParam[ModelCollectionField[C, M]] = RequiredParam(this, errorMsg)
+
+}
+
+object CollectionField {
+  final class ModelCollectionFieldBuilder[C[_]] {
+    def ofModel[M](
+        model: M,
+        description: Option[String] = Field.Defaults.description,
+        notes: Option[String] = Field.Defaults.notes,
+        prettyName: Option[String] = Field.Defaults.prettyName): ModelCollectionField[C, M] =
+      ModelCollectionField[C, M](model, description, notes, prettyName)
+  }
+
+  def apply[C[_]]: ModelCollectionFieldBuilder[C] = new ModelCollectionFieldBuilder[C]
 }

@@ -178,5 +178,36 @@ class JsonBodyReaderSpec extends Spec {
         Some(stringWithDefault.getOrElse(stringWithDefaultField.default)),
         requiredBoolean)) ==== results
     }
+
+    "successfully bind nested collections of models" ! prop { (
+        booleanField: Field[Boolean],
+        stringWithDefaultField: FieldWithDefault[String],
+        foos: List[(Option[Boolean], Option[String])],
+        requiredBoolean: Boolean, requiredBooleanField: RequiredParam[Field[Boolean]]) =>
+
+      val fields =
+        ("body" ->> JsonParam(ModelField(Model(
+          ("foos" ->> CollectionField[List].ofModel(Model(
+            ("boolean" ->> booleanField) ::
+            ("stringWithDefault" ->> stringWithDefaultField) :: HNil))) ::
+          ("requiredBoolean" ->> requiredBooleanField) :: HNil)))
+        ) :: HNil
+
+      val body =
+        ("foos" -> foos.map{case (boolean, stringWithDefault) => (
+          ("boolean" -> boolean) ~
+          ("stringWithDefault" -> stringWithDefault))}) ~
+        ("requiredBoolean" -> requiredBoolean)
+      val request = mockRequest(jsonBody = Some(compact(render(body))))
+
+      val results = RequestBinding.fieldBinder(fields).run(request).map { params =>
+        val body = params.get("body")
+        val foos = body.get("foos").map(_.map(foo => (foo.get("boolean"), foo.get("stringWithDefault"))))
+        (foos, body.get("requiredBoolean"))
+      }
+      \/.right[Errors, (Option[List[(Option[Boolean], String)]], Boolean)]((
+        Some(foos.map{case (booleanMaybe, stringMaybe) => (booleanMaybe, stringMaybe.getOrElse(stringWithDefaultField.default))}),
+        requiredBoolean)) ==== results
+    }
   }
 }

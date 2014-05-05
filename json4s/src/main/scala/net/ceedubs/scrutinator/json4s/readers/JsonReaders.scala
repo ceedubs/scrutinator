@@ -111,6 +111,28 @@ trait JsonReaders {
     }
   }
 
+  implicit def nestedJsonCollectionReader[C[_], M, L <: HList, O <: HList](implicit asModel: AsModel.Aux[M, L], binder: FieldBinder.Aux[L, JValue, O], cbf: CanBuildFrom[Nothing, O, C[O]]): ParamReader[ValidatedOption, (NamedParam[ModelCollectionField[C, M]], JValue), C[O]] =
+    ParamReader[ValidatedOption, (NamedParam[ModelCollectionField[C, M]], JValue), C[O]] { case (history, (namedParam, jValue)) => {
+      val fieldC = FieldC(namedParam.name, namedParam.param.prettyName)
+      val updatedHistory = fieldC :: history
+      (jValue \ namedParam.name) match {
+        case JArray(l) =>
+          (Traverse[List].traverseU(l.zipWithIndex) { case (jValueAtIndex, index) =>
+            val nestedHistory = IndexC(index) :: history
+            binder(asModel(namedParam.param.model).fields)/*.map(Option(_))*/.run((nestedHistory, jValueAtIndex))
+            //entryReader.reader((nestedHistory, jValue)).flatMap(o => std.option.toSuccess(o)(
+            //  invalidFormatNel(nestedHistory, "JSON array with no null or undefined elements")))
+          }).map(list => Option(list.to[C]))
+
+        // TODO
+        //case j: JObject => binder(asModel(namedParam.param.model).fields).map(Some(_)).run((
+        //  updatedHistory, j))
+        case JNothing | JNull => Validation.success(None)
+        case x => invalidFormat(updatedHistory, "JSON object")
+      }
+    }
+  }
+
   implicit def jsonRequestBodyReader[M, L <: HList](implicit asModel: AsModel.Aux[M, L], binder: FieldBinder[L, JValue]): ParamReader[Validated, (NamedParam[JsonParam[ModelField[M]]], Request), binder.R] =
     ParamReader[Validated, (NamedParam[JsonParam[ModelField[M]]], Request), binder.R] { case (history, (namedParam, request)) =>
       Validation.fromTryCatch(JsonMethods.parse(request.body)).
