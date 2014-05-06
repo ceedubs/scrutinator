@@ -1,7 +1,5 @@
 package net.ceedubs.scrutinator
 
-import shapeless._
-
 /**
  * A parameter of type A.
  * For example, a Field[Int] will result in an Int after binding.
