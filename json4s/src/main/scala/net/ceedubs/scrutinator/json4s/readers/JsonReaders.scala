@@ -18,63 +18,52 @@ object JsonReaders {
   object JValueReader {
     def reader[A](f: Function2[CursorHistory, JValue, ValidatedOption[A]]): JValueReader[A] =
       ParamReader[ValidatedOption, JValue, A](f)
+
+    def simpleReader[A](expectedType: String)(f: PartialFunction[JValue, A]): JValueReader[A] =
+      ParamReader[ValidatedOption, JValue, A]((history, jValue) =>
+        f.
+        andThen((a: A) => Validation.success(Some(a))).
+        orElse[JValue, ValidatedOption[A]]{
+          case JNothing | JNull => Validation.success(None)
+          case _ => invalidFormat(history, expectedType)
+        }.
+        apply(jValue))
   }
 }
 
 trait JsonReaders {
   import JsonReaders._
 
-  implicit val stringJValueReader: JValueReader[String] =
-    JValueReader.reader( (history, jValue) => jValue match {
-        case JString(s) => Validation.success(Some(s))
-        case JNothing | JNull => Validation.success(None)
-        case x => invalidFormat(history, "string")
-    })
+  implicit val stringJValueReader: JValueReader[String] = JValueReader.simpleReader("string"){
+    case JString(s) => s
+  }
 
-  implicit val intJValueReader: JValueReader[Int] =
-    JValueReader.reader( (history, jValue) => jValue match {
-        case JInt(x) => Validation.success(Some(x.toInt))
-        case JNothing | JNull => Validation.success(None)
-        case x => invalidFormat(history, "integer")
-    })
+  implicit val intJValueReader: JValueReader[Int] = JValueReader.simpleReader("integer"){
+    case JInt(x) if x.isValidInt => x.toInt
+  }
 
-  implicit val longJValueReader: JValueReader[Long] =
-    JValueReader.reader( (history, jValue) => jValue match {
-      case JInt(x) => Validation.success(Some(x.toLong))
-      case JNothing | JNull => Validation.success(None)
-      case x => invalidFormat(history, "long")
-    })
+  implicit val longJValueReader: JValueReader[Long] = JValueReader.simpleReader("long"){
+    case JInt(x) if x.isValidLong => x.toLong
+  }
 
-  implicit val doubleJValueReader: JValueReader[Double] =
-    JValueReader.reader( (history, jValue) => jValue match {
-      case JDouble(x) => Validation.success(Some(x.toDouble))
-      case JInt(x) => Validation.success(Some(x.toDouble))
-      case JNothing | JNull => Validation.success(None)
-      case x => invalidFormat(history, "double")
-    })
+  implicit val doubleJValueReader: JValueReader[Double] = JValueReader.simpleReader("double"){
+    case JDouble(x) => x.toDouble
+    case JInt(x) if x.isValidDouble => x.toDouble
+  }
 
-  implicit val floatJValueReader: JValueReader[Float] =
-    JValueReader.reader( (history, jValue) => jValue match {
-      case JDouble(x) => Validation.success(Some(x.toFloat))
-      case JDecimal(x) => Validation.success(Some(x.toFloat))
-      case JInt(x) => Validation.success(Some(x.toFloat))
-      case JNothing | JNull => Validation.success(None)
-      case x => invalidFormat(history, "float")
-    })
+  implicit val floatJValueReader: JValueReader[Float] = JValueReader.simpleReader("float"){
+    case JDouble(x) if x >= Float.MinValue && x <= Float.MaxValue => x.toFloat
+    case JDecimal(x) if x.isValidFloat => x.toFloat
+    case JInt(x) if x.isValidFloat => x.toFloat
+  }
 
-  implicit val shortJValueReader: JValueReader[Short] =
-    JValueReader.reader( (history, jValue) => jValue match {
-      case JInt(x) => Validation.success(Some(x.toShort))
-      case JNothing | JNull => Validation.success(None)
-      case x => invalidFormat(history, "short")
-    })
+  implicit val shortJValueReader: JValueReader[Short] = JValueReader.simpleReader("short"){
+    case JInt(x) if x.isValidShort => x.toShort
+  }
 
-  implicit val booleanJValueReader: JValueReader[Boolean] =
-    JValueReader.reader( (history, jValue) => jValue match {
-      case JBool(b) => Validation.success(Some(b))
-      case JNothing | JNull => Validation.success(None)
-      case x => invalidFormat(history, "boolean")
-    })
+  implicit val booleanJValueReader: JValueReader[Boolean] = JValueReader.simpleReader("boolean"){
+    case JBool(b) => b
+  }
 
   implicit def cbfJValueReader[C[_], A](implicit entryReader: JValueReader[A], cbf: CanBuildFrom[Nothing, A, C[A]]): JValueReader[C[A]] =
     JValueReader.reader( (history, jValue) => jValue match {
@@ -119,16 +108,10 @@ trait JsonReaders {
         case JArray(l) =>
           (Traverse[List].traverseU(l.zipWithIndex) { case (jValueAtIndex, index) =>
             val nestedHistory = IndexC(index) :: history
-            binder(asModel(namedParam.param.model).fields)/*.map(Option(_))*/.run((nestedHistory, jValueAtIndex))
-            //entryReader.reader((nestedHistory, jValue)).flatMap(o => std.option.toSuccess(o)(
-            //  invalidFormatNel(nestedHistory, "JSON array with no null or undefined elements")))
+            binder(asModel(namedParam.param.model).fields).run((nestedHistory, jValueAtIndex))
           }).map(list => Option(list.to[C]))
-
-        // TODO
-        //case j: JObject => binder(asModel(namedParam.param.model).fields).map(Some(_)).run((
-        //  updatedHistory, j))
         case JNothing | JNull => Validation.success(None)
-        case x => invalidFormat(updatedHistory, "JSON object")
+        case x => invalidFormat(updatedHistory, "JSON array")
       }
     }
   }
