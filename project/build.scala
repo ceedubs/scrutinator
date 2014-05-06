@@ -10,12 +10,14 @@ object Dependencies {
     val commands = "org.scalatra" %% "scalatra-commands" % scalatraVersion
     val swagger = "org.scalatra" %% "scalatra-swagger" % scalatraVersion
     val scalatraSpecs2 = "org.scalatra" %% "scalatra-specs2" % scalatraVersion
+    val scalate = "org.scalatra" %% "scalatra-scalate" % scalatraVersion
   }
 
   object Tests {
     val specs2 = "org.specs2" %% "specs2" % "2.3.11"
     val scalacheck = "org.scalacheck" %% "scalacheck" % "1.10.1"
   }
+
 
   val commonDependencies = Seq(
     Scalatra.core,
@@ -138,4 +140,12 @@ object build extends Build {
     file("swagger"),
     settings = BuildSettings.defaultSettings
   ) dependsOn (core % "test->test;compile->compile", scrutinatorScalatra % "test->test;compile->compile")
+
+  lazy val scrutinatorPetStore = Project(
+    "scrutinator-pet-store",
+    file("pet-store"),
+    settings = BuildSettings.defaultSettings ++ Seq(
+      libraryDependencies ++= Seq(
+        Dependencies.Scalatra.scalate))
+  ) dependsOn (scrutinatorJson4s, scrutinatorSwagger)
 }
