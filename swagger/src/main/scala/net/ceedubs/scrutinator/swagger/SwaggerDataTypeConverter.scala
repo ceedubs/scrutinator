@@ -26,13 +26,26 @@ object SwaggerCoreDataTypeConverter {
 
   implicit val dateSwaggerDataConverter: SwaggerCoreDataTypeConverter[java.util.Date] = apply[java.util.Date](DataType.Date)
 
-  implicit def listSwaggerDataConverter[A](implicit aConverter: SwaggerCoreDataTypeConverter[A]): SwaggerCoreDataTypeConverter[List[A]] = apply[List[A]](DataType.GenList(aConverter.dataType))
+  implicit def wrappedSwaggerDataConverter[C[_], A](implicit wrapper: SwaggerWrappedDataTypeConverter[C], converter: SwaggerCoreDataTypeConverter[A]): SwaggerCoreDataTypeConverter[C[A]] =
+    apply[C[A]](wrapper(converter.dataType))
+}
 
-  implicit def setSwaggerDataConverter[A](implicit aConverter: SwaggerCoreDataTypeConverter[A]): SwaggerCoreDataTypeConverter[Set[A]] = apply[Set[A]](DataType.GenSet(aConverter.dataType))
+trait SwaggerWrappedDataTypeConverter[C[_]] {
+  def apply(d: DataType): DataType
+}
 
-  implicit def vectorSwaggerDataConverter[A](implicit aConverter: SwaggerCoreDataTypeConverter[A]): SwaggerCoreDataTypeConverter[Vector[A]] = apply[Vector[A]](DataType.GenList(aConverter.dataType))
+object SwaggerWrappedDataTypeConverter {
+  def wrapper[C[_]](f: DataType => DataType): SwaggerWrappedDataTypeConverter[C] = new SwaggerWrappedDataTypeConverter[C] {
+    def apply(d: DataType) = f(d)
+  }
 
-  implicit def seqSwaggerDataConverter[A](implicit aConverter: SwaggerCoreDataTypeConverter[A]): SwaggerCoreDataTypeConverter[Seq[A]] = apply[Seq[A]](DataType.GenList(aConverter.dataType))
+  implicit val listDataTypeConverter: SwaggerWrappedDataTypeConverter[List] = wrapper[List](DataType.GenList(_))
 
-  implicit def indexedSeqSwaggerDataConverter[A](implicit aConverter: SwaggerCoreDataTypeConverter[A]): SwaggerCoreDataTypeConverter[IndexedSeq[A]] = apply[IndexedSeq[A]](DataType.GenList(aConverter.dataType))
+  implicit val setDataTypeConverter: SwaggerWrappedDataTypeConverter[Set] = wrapper[Set](DataType.GenSet(_))
+
+  implicit val vectorDataTypeConverter: SwaggerWrappedDataTypeConverter[Vector] = wrapper[Vector](DataType.GenList(_))
+
+  implicit val seqDataTypeConverter: SwaggerWrappedDataTypeConverter[Seq] = wrapper[Seq](DataType.GenList(_))
+
+  implicit val indexedSeqDataTypeConverter: SwaggerWrappedDataTypeConverter[IndexedSeq] = wrapper[IndexedSeq](DataType.GenList(_))
 }
