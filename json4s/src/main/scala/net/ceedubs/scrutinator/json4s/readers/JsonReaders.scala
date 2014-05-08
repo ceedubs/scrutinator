@@ -80,7 +80,7 @@ trait JsonReaders {
   implicit def jsonFieldReader[A](implicit jValueReader: JValueReader[A]): FieldReader[ValidatedOption, JValue, A] =
     FieldReader.reader( (history, field, jValue) => jValue match {
       case j: JObject =>
-        jValueReader.reader((field :: history, (j \ field.name)))
+        jValueReader.reader((history, (j \ field.name)))
       case JNothing | JNull => Validation.success(None)
       case x => invalidFormat(history, "JSON object")
     })

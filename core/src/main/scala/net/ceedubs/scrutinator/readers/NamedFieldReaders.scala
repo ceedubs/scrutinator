@@ -2,11 +2,17 @@ package net.ceedubs.scrutinator
 package readers
 
 import scalaz.{ @@ => _, _}
+import scalaz.std.list._
 
 trait NamedFieldReaders {
-  implicit def namedFieldReader[M[+_], I, A](implicit fieldReader: FieldReader[M, I, A]): ParamReader[M, (NamedParam[Field[A]], I), A] =
-    ParamReader[M, (NamedParam[Field[A]], I), A] { case (history, (namedParam, input)) =>
+  implicit def namedFieldReader[I, A](implicit fieldReader: FieldReader[ValidatedOption, I, A]): ParamReader[ValidatedOption, (NamedParam[Field[A]], I), A] =
+    ParamReader[ValidatedOption, (NamedParam[Field[A]], I), A] { case (history, (namedParam, input)) =>
+      val readerWithValidations = ParamReader.andThenCheckField(fieldReader)((nestedHistory, fieldC, a) =>
+        std.option.toFailure(std.list.toNel(namedParam.param.validations.flatMap(f => f(fieldC, a))))(a).
+        leftMap(_.map(ScopedValidationFail(_, nestedHistory)))
+      )
       val fieldC = FieldC(namedParam.name, prettyName = namedParam.param.prettyName)
-      fieldReader.reader((history, (fieldC, input)))
+      val nestedHistory = fieldC :: history
+      readerWithValidations.reader((nestedHistory, (fieldC, input)))
     }
 }

@@ -9,6 +9,8 @@ import shapeless._
 import shapeless.syntax.singleton._
 import scalaz._
 import scalaz.syntax.std.option._
+import scalaz.std.string._
+import scalaz.std.anyVal._
 import scala.collection.JavaConverters._
 import ParamError._
 
@@ -208,6 +210,54 @@ class JsonBodyReaderSpec extends Spec {
       \/.right[Errors, (Option[List[(Option[Boolean], String)]], Boolean)]((
         Some(foos.map{case (booleanMaybe, stringMaybe) => (booleanMaybe, stringMaybe.getOrElse(stringWithDefaultField.default))}),
         requiredBoolean)) ==== results
+    }
+
+    "run validations on nested params" ! prop { (
+        string: String, stringField: Field[String],
+        booleanField: Field[Boolean],
+        stringWithDefault: String, stringWithDefaultField: FieldWithDefault[String],
+        requiredBooleanField: RequiredParam[Field[Boolean]]) =>
+
+        (!Equal[String].equal(string, "foo") && !Equal[String].equal(stringWithDefault, "bar")) ==> {
+          val fields =
+            ("body" ->> JsonParam(ModelField(Model(
+              ("string" ->> stringField.check(ForcedError, "string must be 'foo'")(Equal[String].equal(_, "foo"))) ::
+              ("foo" ->> ModelField(Model(
+                ("boolean" ->> booleanField.check(ForcedError, "boolean must be true")(Equal[Boolean].equal(_, true))) ::
+                ("stringWithDefault" ->> stringWithDefaultField.copy(param = stringWithDefaultField.param.check(ForcedError, "stringWithDefault must be 'bar'")(Equal[String].equal(_, "bar")))) :: HNil))) ::
+              ("requiredBoolean" ->> requiredBooleanField.copy(param = requiredBooleanField.param.check(ForcedError, "requiredBoolean must be false")(Equal[Boolean].equal(_, false)))) :: HNil)))
+            ) :: HNil
+
+          val body =
+            ("string" -> string) ~
+            ("foo" -> (
+              ("boolean" -> false) ~
+              ("stringWithDefault" -> stringWithDefault))) ~
+            ("requiredBoolean" -> true)
+          val request = mockRequest(jsonBody = Some(compact(render(body))))
+
+          val results = RequestBinding.fieldBinder(fields).run(request).map { params =>
+            val body = params.get("body")
+            val foo = body.get("foo")
+            (body.get("string"), foo.flatMap(_.get("boolean")), foo.map(_.get("stringWithDefault")), body.get("requiredBoolean"))
+          }
+
+          val fooHistory = FieldC("foo", None) :: Nil
+          \/.left[Errors, (Option[String], Option[Boolean], Option[String], Boolean)](NonEmptyList(
+            ScopedValidationFail(
+              ValidationFail(ForcedError, Some("string must be 'foo'")),
+              FieldC("string", stringField.prettyName) :: Nil),
+            ScopedValidationFail(
+              ValidationFail(ForcedError, Some("boolean must be true")),
+              FieldC("boolean", booleanField.prettyName) :: fooHistory),
+            ScopedValidationFail(
+              ValidationFail(ForcedError, Some("stringWithDefault must be 'bar'")),
+              FieldC("stringWithDefault", stringWithDefaultField.param.prettyName) :: fooHistory),
+            ScopedValidationFail(
+              ValidationFail(ForcedError, Some("requiredBoolean must be false")),
+              FieldC("requiredBoolean", requiredBooleanField.param.prettyName) :: Nil)
+          )) ==== results
+        }
     }
   }
 }
