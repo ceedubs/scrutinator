@@ -8,20 +8,20 @@ trait SwaggerSourceConverter[S <: ValueSource] {
 }
 
 object SwaggerSourceConverter {
-  def apply[S <: ValueSource](s: org.scalatra.swagger.ParamType.ParamType): SwaggerSourceConverter[S] =
+  def converter[S <: ValueSource](s: org.scalatra.swagger.ParamType.ParamType): SwaggerSourceConverter[S] =
     new SwaggerSourceConverter[S] {
       val sourceType = s
     }
 
   implicit val headerSourceConverter: SwaggerSourceConverter[Headers] =
-    SwaggerSourceConverter(org.scalatra.swagger.ParamType.Header)
+    converter(org.scalatra.swagger.ParamType.Header)
 
   implicit val queryStringSourceConverter: SwaggerSourceConverter[QueryString] =
-    SwaggerSourceConverter(org.scalatra.swagger.ParamType.Query)
+    converter(org.scalatra.swagger.ParamType.Query)
 
   implicit val jsonBodySourceConverter: SwaggerSourceConverter[Json] =
-    SwaggerSourceConverter(org.scalatra.swagger.ParamType.Body)
+    converter(org.scalatra.swagger.ParamType.Body)
 
   implicit val pathSourceConverter: SwaggerSourceConverter[Path] =
-    SwaggerSourceConverter(org.scalatra.swagger.ParamType.Path)
+    converter(org.scalatra.swagger.ParamType.Path)
 }

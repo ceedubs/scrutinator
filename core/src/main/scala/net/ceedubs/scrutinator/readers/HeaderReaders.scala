@@ -10,7 +10,7 @@ trait HeaderReaders {
   import Field._
 
   implicit def headerNamedParamReader[A](implicit reader: FieldReader[ValidatedOption, HeaderParams, A]): ParamReader[ValidatedOption, (NamedParam[HeaderParam[Field[A]]], Request), A] = {
-    ParamReader[ValidatedOption, (NamedParam[HeaderParam[Field[A]]], Request), A] { case (history, (namedParam, request)) =>
+    ParamReader.paramReader[ValidatedOption, (NamedParam[HeaderParam[Field[A]]], Request), A] { case (history, (namedParam, request)) =>
       val fieldC = FieldC(name = namedParam.name, prettyName = namedParam.param.prettyName)
       val headers = HeaderParams(request.headers)
       val nestedHistory = fieldC :: history
@@ -27,7 +27,7 @@ trait HeaderReaders {
   }
 
   implicit val headerStringFieldReader: FieldReader[ValidatedOption, HeaderParams, String] =
-    ParamReader { case (history, (fieldC, headerParams)) =>
+    ParamReader.paramReader { case (history, (fieldC, headerParams)) =>
         Validation.success(headerParams.get(fieldC.name).filterNot(_.isEmpty))
     }
 

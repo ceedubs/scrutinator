@@ -8,26 +8,26 @@ trait SwaggerCoreDataTypeConverter[A] {
 }
 
 object SwaggerCoreDataTypeConverter {
-  def apply[A](d: DataType): SwaggerCoreDataTypeConverter[A] = new SwaggerCoreDataTypeConverter[A] {
+  def converter[A](d: DataType): SwaggerCoreDataTypeConverter[A] = new SwaggerCoreDataTypeConverter[A] {
     val dataType = d
   }
 
-  implicit val intSwaggerDataConverter: SwaggerCoreDataTypeConverter[Int] = apply[Int](DataType.Int)
+  implicit val intSwaggerDataConverter: SwaggerCoreDataTypeConverter[Int] = converter[Int](DataType.Int)
 
-  implicit val stringSwaggerDataConverter: SwaggerCoreDataTypeConverter[String] = apply[String](DataType.String)
+  implicit val stringSwaggerDataConverter: SwaggerCoreDataTypeConverter[String] = converter[String](DataType.String)
 
-  implicit val booleanSwaggerDataConverter: SwaggerCoreDataTypeConverter[Boolean] = apply[Boolean](DataType.Boolean)
+  implicit val booleanSwaggerDataConverter: SwaggerCoreDataTypeConverter[Boolean] = converter[Boolean](DataType.Boolean)
 
-  implicit val longSwaggerDataConverter: SwaggerCoreDataTypeConverter[Long] = apply[Long](DataType.Long)
+  implicit val longSwaggerDataConverter: SwaggerCoreDataTypeConverter[Long] = converter[Long](DataType.Long)
 
-  implicit val floatSwaggerDataConverter: SwaggerCoreDataTypeConverter[Float] = apply[Float](DataType.Float)
+  implicit val floatSwaggerDataConverter: SwaggerCoreDataTypeConverter[Float] = converter[Float](DataType.Float)
 
-  implicit val doubleSwaggerDataConverter: SwaggerCoreDataTypeConverter[Double] = apply[Double](DataType.Double)
+  implicit val doubleSwaggerDataConverter: SwaggerCoreDataTypeConverter[Double] = converter[Double](DataType.Double)
 
-  implicit val dateSwaggerDataConverter: SwaggerCoreDataTypeConverter[java.util.Date] = apply[java.util.Date](DataType.Date)
+  implicit val dateSwaggerDataConverter: SwaggerCoreDataTypeConverter[java.util.Date] = converter[java.util.Date](DataType.Date)
 
-  implicit def wrappedSwaggerDataConverter[C[_], A](implicit wrapper: SwaggerWrappedDataTypeConverter[C], converter: SwaggerCoreDataTypeConverter[A]): SwaggerCoreDataTypeConverter[C[A]] =
-    apply[C[A]](wrapper(converter.dataType))
+  implicit def wrappedSwaggerDataConverter[C[_], A](implicit wrapper: SwaggerWrappedDataTypeConverter[C], c: SwaggerCoreDataTypeConverter[A]): SwaggerCoreDataTypeConverter[C[A]] =
+    converter[C[A]](wrapper(c.dataType))
 }
 
 trait SwaggerWrappedDataTypeConverter[C[_]] {

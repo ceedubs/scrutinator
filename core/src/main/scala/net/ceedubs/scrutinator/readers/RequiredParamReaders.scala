@@ -7,7 +7,7 @@ trait RequiredParamReaders extends RequiredParamReaders0
 
 trait RequiredParamReaders0 extends RequiredParamReaders1 {
   implicit def requiredParamFromSourceReader[I, P, A, S <: ValueSource](implicit reader: ParamReader[Validated, (NamedParam[ParamFromSource[P, S]], I), Option[A]]): ParamReader[Validated, (NamedParam[ParamFromSource[RequiredParam[P], S]], I), A] = {
-    ParamReader[Validated, (NamedParam[ParamFromSource[RequiredParam[P], S]], I), A] { case (history, (namedParam, input)) =>
+    ParamReader.paramReader[Validated, (NamedParam[ParamFromSource[RequiredParam[P], S]], I), A] { case (history, (namedParam, input)) =>
       val nestedNamedParam = NamedParam[ParamFromSource[P, S]](namedParam.name, ParamFromSource[P, S](namedParam.param.param))
       reader.reader.run((history, (nestedNamedParam, input))).flatMap { maybeA =>
         std.option.toSuccess(maybeA) {
@@ -25,7 +25,7 @@ trait RequiredParamReaders0 extends RequiredParamReaders1 {
 
 trait RequiredParamReaders1 {
   implicit def requiredParamReader[I, P, A](implicit reader: ParamReader[Validated, (NamedParam[P], I), Option[A]]): ParamReader[Validated, (NamedParam[RequiredParam[P]], I), A] = {
-    ParamReader[Validated, (NamedParam[RequiredParam[P]], I), A] { case (history, (namedParam, input)) =>
+    ParamReader.paramReader[Validated, (NamedParam[RequiredParam[P]], I), A] { case (history, (namedParam, input)) =>
       val nestedNamedParam = NamedParam(namedParam.name, namedParam.param.param)
       reader.reader.run((history, (nestedNamedParam, input))).flatMap { maybeA =>
         std.option.toSuccess(maybeA) {

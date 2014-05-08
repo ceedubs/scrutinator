@@ -13,7 +13,7 @@ trait QueryStringReaders {
   import Field._
 
   implicit def queryStringNamedParamReader[A](implicit reader: FieldReader[ValidatedOption, QueryStringParams, A]): ParamReader[ValidatedOption, (NamedParam[QueryParam[Field[A]]], Request), A] = {
-    ParamReader[ValidatedOption, (NamedParam[QueryParam[Field[A]]], Request), A] { case (history, (namedParam, request)) =>
+    ParamReader.paramReader[ValidatedOption, (NamedParam[QueryParam[Field[A]]], Request), A] { case (history, (namedParam, request)) =>
       val fieldC = FieldC(name = namedParam.name, prettyName = namedParam.param.prettyName)
       val queryParams = QueryStringParams(request.multiParameters)
       reader.reader((history, (fieldC, queryParams))).flatMap { maybeA =>
@@ -67,7 +67,7 @@ final case class QueryStringElReader[A](r: ParamReader[Validated, String, A]) {
 
 object QueryStringElReader {
   def reader[A](f: Function2[CursorHistory, String, Validated[A]]): QueryStringElReader[A] =
-    QueryStringElReader[A](ParamReader(f))
+    QueryStringElReader[A](ParamReader.paramReader(f))
 
   implicit val stringQueryStringElReader: QueryStringElReader[String] =
     QueryStringElReader.reader((history, el) => Validation.success(el))

@@ -23,7 +23,7 @@ object ParamReader extends QueryStringReaders with OptionalParamReaders
   with RequiredParamReaders with HeaderReaders
   with FieldWithDefaultReaders with NamedFieldReaders {
 
-  def apply[M[+_], I, O](f: Function2[CursorHistory, I, M[O]]): ParamReader[M, I, O] = fromKleisli(Kleisli(f.tupled))
+  def paramReader[M[+_], I, O](f: Function2[CursorHistory, I, M[O]]): ParamReader[M, I, O] = fromKleisli(Kleisli(f.tupled))
 
   def fromKleisli[M[+_], I, O](k: Kleisli[M, (CursorHistory, I), O]): ParamReader[M, I, O] = new ParamReader[M, I, O] {
 
@@ -39,7 +39,7 @@ object ParamReader extends QueryStringReaders with OptionalParamReaders
   }
 
   def andThenCheckValue[I, A, B](reader: ParamReader[Validated, I, A])(f: Function2[CursorHistory, A, Validated[B]]): ParamReader[Validated, I, B] =
-    ParamReader[Validated, I, B]((history, input) =>
+    ParamReader.paramReader[Validated, I, B]((history, input) =>
       reader.reader((history, input)).
       flatMap(a => f(history, a)))
 
@@ -50,7 +50,7 @@ object ParamReader extends QueryStringReaders with OptionalParamReaders
 
 object FieldReader {
   def reader[M[+_], I, O](f: Function3[CursorHistory, FieldC, I, M[O]]): FieldReader[M, I, O] =
-    ParamReader[M, (FieldC, I), O] { case (history, (fieldC, i)) =>
+    ParamReader.paramReader[M, (FieldC, I), O] { case (history, (fieldC, i)) =>
       f(history, fieldC, i)
     }
 

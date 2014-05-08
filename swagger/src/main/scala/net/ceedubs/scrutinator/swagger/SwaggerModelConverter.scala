@@ -23,7 +23,7 @@ trait SwaggerModelConverter[A] {
 }
 
 object SwaggerModelConverter extends SwaggerModelConverters {
-  def apply[A](f: A => ModelState[Model]): SwaggerModelConverter[A] = new SwaggerModelConverter[A] {
+  def converter[A](f: A => ModelState[Model]): SwaggerModelConverter[A] = new SwaggerModelConverter[A] {
     def apply(a: A) = f(a)
   }
 }
@@ -33,7 +33,7 @@ trait ModelWithIdPropertyConverter[A] {
 }
 
 object ModelWithIdPropertyConverter extends FieldModelPropertyConverters {
-  def apply[A](f: A => ModelState[ModelProperty]): ModelWithIdPropertyConverter[A] = new ModelWithIdPropertyConverter[A] {
+  def converter[A](f: A => ModelState[ModelProperty]): ModelWithIdPropertyConverter[A] = new ModelWithIdPropertyConverter[A] {
     def apply(a: A) = f(a)
   }
 }
@@ -47,7 +47,7 @@ object toModelWithIdProperty extends Poly1 {
 }
 
 trait SwaggerModelConverters {
-  implicit def modelWithIdConverter[F[_], L <: HList, O <: HList](implicit traverser: TraverserAux[L, toModelWithIdProperty.type, F, O], toList: ToList[O, NamedParam[ModelProperty]], ev: F[O] === ModelState[O]): SwaggerModelConverter[ModelWithId[L]] = SwaggerModelConverter[ModelWithId[L]](modelWithId =>
+  implicit def modelWithIdConverter[F[_], L <: HList, O <: HList](implicit traverser: TraverserAux[L, toModelWithIdProperty.type, F, O], toList: ToList[O, NamedParam[ModelProperty]], ev: F[O] === ModelState[O]): SwaggerModelConverter[ModelWithId[L]] = SwaggerModelConverter.converter[ModelWithId[L]](modelWithId =>
       ModelState[Model] { s =>
         val modelId = ModelId(modelWithId.id)
         s.get(modelId)
@@ -66,7 +66,7 @@ trait SwaggerModelConverters {
 
 trait FieldModelPropertyConverters {
   implicit def fieldModelPropertyConverter[A](implicit dataTypeConverter: SwaggerCoreDataTypeConverter[A]): ModelWithIdPropertyConverter[NamedParam[Field[A]]] =
-    ModelWithIdPropertyConverter[NamedParam[Field[A]]](namedParam =>
+    ModelWithIdPropertyConverter.converter[NamedParam[Field[A]]](namedParam =>
       State.state(
         ModelProperty(
           `type` = dataTypeConverter.dataType,
@@ -74,19 +74,19 @@ trait FieldModelPropertyConverters {
           description = namedParam.param.description)))
 
   implicit def requiredFieldModelPropertyConverter[P](implicit converter: ModelWithIdPropertyConverter[NamedParam[P]]): ModelWithIdPropertyConverter[NamedParam[RequiredParam[P]]] =
-    ModelWithIdPropertyConverter[NamedParam[RequiredParam[P]]] { namedParam =>
+    ModelWithIdPropertyConverter.converter[NamedParam[RequiredParam[P]]] { namedParam =>
       val nestedNamedParam = NamedParam(namedParam.name, namedParam.param.param)
       converter(nestedNamedParam).map(_.copy(required = true))
     }
 
   implicit def fieldWithDefaultModelPropertyConverter[A](implicit converter: ModelWithIdPropertyConverter[NamedParam[Field[A]]]): ModelWithIdPropertyConverter[NamedParam[FieldWithDefault[A]]] =
-    ModelWithIdPropertyConverter[NamedParam[FieldWithDefault[A]]] { namedParam =>
+    ModelWithIdPropertyConverter.converter[NamedParam[FieldWithDefault[A]]] { namedParam =>
       val nestedNamedParam = NamedParam(namedParam.name, namedParam.param.param)
       converter(nestedNamedParam)
     }
 
   implicit def modelModelPropertyConverter[L <: HList](implicit modelConverter: SwaggerModelConverter[ModelWithId[L]]): ModelWithIdPropertyConverter[NamedParam[ModelField[ModelWithId[L]]]] =
-    ModelWithIdPropertyConverter[NamedParam[ModelField[ModelWithId[L]]]](namedParam =>
+    ModelWithIdPropertyConverter.converter[NamedParam[ModelField[ModelWithId[L]]]](namedParam =>
       modelConverter(namedParam.param.model).
       map(model =>
         ModelProperty(
@@ -95,7 +95,7 @@ trait FieldModelPropertyConverters {
           description = namedParam.param.description)))
 
   implicit def modelCollectionModelPropertyConverter[L <: HList](implicit modelConverter: SwaggerModelConverter[ModelWithId[L]]): ModelWithIdPropertyConverter[NamedParam[ModelCollectionField[List, ModelWithId[L]]]] =
-    ModelWithIdPropertyConverter[NamedParam[ModelCollectionField[List, ModelWithId[L]]]](namedParam =>
+    ModelWithIdPropertyConverter.converter[NamedParam[ModelCollectionField[List, ModelWithId[L]]]](namedParam =>
       modelConverter(namedParam.param.model).
       map(model =>
         ModelProperty(

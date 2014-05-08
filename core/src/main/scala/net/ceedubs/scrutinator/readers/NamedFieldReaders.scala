@@ -6,7 +6,7 @@ import scalaz.std.list._
 
 trait NamedFieldReaders {
   implicit def namedFieldReader[I, A](implicit fieldReader: FieldReader[ValidatedOption, I, A]): ParamReader[ValidatedOption, (NamedParam[Field[A]], I), A] =
-    ParamReader[ValidatedOption, (NamedParam[Field[A]], I), A] { case (history, (namedParam, input)) =>
+    ParamReader.paramReader[ValidatedOption, (NamedParam[Field[A]], I), A] { case (history, (namedParam, input)) =>
       val readerWithValidations = ParamReader.andThenCheckField(fieldReader)((nestedHistory, fieldC, a) =>
         std.option.toFailure(std.list.toNel(namedParam.param.validations.flatMap(f => f(fieldC, a))))(a).
         leftMap(_.map(ScopedValidationFail(_, nestedHistory)))

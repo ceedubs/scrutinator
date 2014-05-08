@@ -17,10 +17,10 @@ object JsonReaders {
 
   object JValueReader {
     def reader[A](f: Function2[CursorHistory, JValue, ValidatedOption[A]]): JValueReader[A] =
-      ParamReader[ValidatedOption, JValue, A](f)
+      ParamReader.paramReader[ValidatedOption, JValue, A](f)
 
     def simpleReader[A](expectedType: String)(f: PartialFunction[JValue, A]): JValueReader[A] =
-      ParamReader[ValidatedOption, JValue, A]((history, jValue) =>
+      ParamReader.paramReader[ValidatedOption, JValue, A]((history, jValue) =>
         f.
         andThen((a: A) => Validation.success(Some(a))).
         orElse[JValue, ValidatedOption[A]]{
@@ -88,7 +88,7 @@ trait JsonReaders {
   implicit def jsonBodyFieldBinder[L <: HList](implicit strategy: FieldBindingStrategy[L, JValue, bindJsonFields.type]): FieldBinder.Aux[L, JValue, strategy.R] = strategy.fieldBinder
 
   implicit def nestedJsonObjectReader[M, L <: HList](implicit asModel: AsModel.Aux[M, L], binder: FieldBinder[L, JValue]): ParamReader[ValidatedOption, (NamedParam[ModelField[M]], JValue), binder.R] =
-    ParamReader[ValidatedOption, (NamedParam[ModelField[M]], JValue), binder.R] { case (history, (namedParam, jValue)) => {
+    ParamReader.paramReader[ValidatedOption, (NamedParam[ModelField[M]], JValue), binder.R] { case (history, (namedParam, jValue)) => {
       val fieldC = FieldC(namedParam.name, namedParam.param.prettyName)
       val updatedHistory = fieldC :: history
       (jValue \ namedParam.name) match {
@@ -101,7 +101,7 @@ trait JsonReaders {
   }
 
   implicit def nestedJsonCollectionReader[C[_], M, L <: HList, O <: HList](implicit asModel: AsModel.Aux[M, L], binder: FieldBinder.Aux[L, JValue, O], cbf: CanBuildFrom[Nothing, O, C[O]]): ParamReader[ValidatedOption, (NamedParam[ModelCollectionField[C, M]], JValue), C[O]] =
-    ParamReader[ValidatedOption, (NamedParam[ModelCollectionField[C, M]], JValue), C[O]] { case (history, (namedParam, jValue)) => {
+    ParamReader.paramReader[ValidatedOption, (NamedParam[ModelCollectionField[C, M]], JValue), C[O]] { case (history, (namedParam, jValue)) => {
       val fieldC = FieldC(namedParam.name, namedParam.param.prettyName)
       val updatedHistory = fieldC :: history
       (jValue \ namedParam.name) match {
@@ -117,7 +117,7 @@ trait JsonReaders {
   }
 
   implicit def jsonRequestBodyReader[M, L <: HList](implicit asModel: AsModel.Aux[M, L], binder: FieldBinder[L, JValue]): ParamReader[Validated, (NamedParam[JsonParam[ModelField[M]]], Request), binder.R] =
-    ParamReader[Validated, (NamedParam[JsonParam[ModelField[M]]], Request), binder.R] { case (history, (namedParam, request)) =>
+    ParamReader.paramReader[Validated, (NamedParam[JsonParam[ModelField[M]]], Request), binder.R] { case (history, (namedParam, request)) =>
       Validation.fromTryCatch(JsonMethods.parse(request.body)).
       leftMap(_ => invalidFormatNel(history, "JSON body")).
       flatMap(jsonBody => binder(asModel(namedParam.param.model).fields).run((history, jsonBody)))

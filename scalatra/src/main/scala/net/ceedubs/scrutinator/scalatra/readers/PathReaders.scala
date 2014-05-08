@@ -13,7 +13,7 @@ trait PathReaders {
   import Field._
 
   implicit def pathNamedParamReader[A](implicit reader: FieldReader[ValidatedOption, PathParams, A]): ParamReader[ValidatedOption, (NamedParam[PathParam[Field[A]]], Request), A] = {
-    ParamReader[ValidatedOption, (NamedParam[PathParam[Field[A]]], Request), A] { case (history, (namedParam, request)) =>
+    ParamReader.paramReader[ValidatedOption, (NamedParam[PathParam[Field[A]]], Request), A] { case (history, (namedParam, request)) =>
       val multiParams: Option[Map[String, Seq[String]]] = request.get(org.scalatra.MultiParamsKey).flatMap(x =>
         if (x.isInstanceOf[MultiParams]) Some(x.asInstanceOf[MultiParams]) else None)
       val params = new org.scalatra.util.MultiMapHeadView[String, String] {
