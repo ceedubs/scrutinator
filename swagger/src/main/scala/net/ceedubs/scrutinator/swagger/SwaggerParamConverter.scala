@@ -15,18 +15,41 @@ object SwaggerParamConverter extends NamedParamConverters with RequiredParamConv
   }
 }
 
+trait AllowableValuesConverter[A] {
+  def apply(allowed: AllowedValues[A]): AllowableValues
+}
+
+object AllowableValuesConverter {
+  implicit val intAllowableValuesConverter: AllowableValuesConverter[Int] = new AllowableValuesConverter[Int] {
+    def apply(allowed: AllowedValues[Int]) = allowed match {
+      case _: AnyValue[_] => AllowableValues.AnyValue
+      case AllowedValueList(allowed, _) => AllowableValues.AllowableValuesList(allowed.list)
+      case AllowedRange(min, max, _) => AllowableValues.AllowableRangeValues(Range.inclusive(min, max))
+    }
+  }
+
+  // certain things can't be handled by Swagger, but we still want them to be allowed for validation
+  implicit def fallbackAllwableValuesConverter[A]: AllowableValuesConverter[A] = new AllowableValuesConverter[A] {
+    def apply(allowed: AllowedValues[A]) = allowed match {
+      case AllowedValueList(allowed, _) => AllowableValues.AllowableValuesList(allowed.list)
+      case _ => AllowableValues.AnyValue
+    }
+  }
+}
+
 trait NamedParamConverters {
   implicit def namedParamConverter[A, S <: ValueSource](
-      implicit sourceConverter: SwaggerSourceConverter[S], dataTypeConverter: SwaggerCoreDataTypeConverter[A]): SwaggerParamConverter[NamedParam[ParamFromSource[Field[A], S]]] = {
+      implicit sourceConverter: SwaggerSourceConverter[S], dataTypeConverter: SwaggerCoreDataTypeConverter[A], allowableValuesConverter: AllowableValuesConverter[A]): SwaggerParamConverter[NamedParam[ParamFromSource[Field[A], S]]] = {
     SwaggerParamConverter.converter[NamedParam[ParamFromSource[Field[A], S]]] { namedParam =>
+      val field = namedParam.param
       State.state(Parameter(
         name = namedParam.name,
         `type` = dataTypeConverter.dataType,
-        description = namedParam.param.description,
-        notes = namedParam.param.notes,
+        description = field.description,
+        notes = field.notes,
         paramType = sourceConverter.sourceType,
         defaultValue = None,
-        allowableValues = AllowableValues.AnyValue, // TODO
+        allowableValues = allowableValuesConverter(field.allowedValues),
         required = false))
     }
   }
@@ -43,7 +66,7 @@ trait NamedParamConverters {
         notes = param.notes,
         paramType = sourceConverter.sourceType,
         defaultValue = None,
-        allowableValues = AllowableValues.AnyValue, // TODO
+        allowableValues = AllowableValues.AnyValue,
         required = false)
     }
 
@@ -59,7 +82,7 @@ trait NamedParamConverters {
         notes = param.notes,
         paramType = sourceConverter.sourceType,
         defaultValue = None,
-        allowableValues = AllowableValues.AnyValue, // TODO
+        allowableValues = AllowableValues.AnyValue,
         required = false)
     }
 }

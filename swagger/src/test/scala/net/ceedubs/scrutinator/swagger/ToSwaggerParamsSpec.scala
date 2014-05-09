@@ -4,18 +4,19 @@ package swagger
 import org.scalatra.swagger.{ AllowableValues, DataType, Parameter, ParamType }
 import shapeless._
 import shapeless.syntax.singleton._
-
+import scalaz.std.string._
 
 class ToSwaggerParamsSpec extends Spec {
   import Field._
   import ValueSource._
 
   "Swagger parameter conversion" should {
-    "convert a list of Swagger parameters" ! prop { (intQueryParam: QueryParam[Field[Int]], stringHeaderParam: HeaderParam[RequiredParam[Field[String]]], longQueryParam: QueryParam[FieldWithDefault[Long]], doublePathParam: PathParam[RequiredParam[Field[Double]]], intJsonParam: Field[Int], stringJsonParam: Field[String], longJsonParam: Field[Long], description: Option[String]) =>
+    "convert a list of Swagger parameters" ! prop { (intQueryParam: Field[Int], stringHeaderParam: RequiredParam[Field[String]], longQueryParam: QueryParam[FieldWithDefault[Long]], doublePathParam: PathParam[RequiredParam[Field[Double]]], intJsonParam: Field[Int], stringJsonParam: Field[String], longJsonParam: Field[Long], description: Option[String]) =>
 
       val fields =
-        ("queryInt" ->> intQueryParam) ::
-        ("headerString" ->> stringHeaderParam) ::
+        ("queryInt" ->> QueryParam(intQueryParam.copy(allowedValues = AllowedValues.range(-3, 3)))) ::
+        ("headerString" ->> HeaderParam(stringHeaderParam.copy(
+          param = stringHeaderParam.param.copy(allowedValues = AllowedValues.anyOf("foo", "bar"))))) ::
         ("queryLong" ->> longQueryParam) ::
         ("pathDouble" ->> doublePathParam) ::
         ("body" ->> JsonParam(ModelField(
@@ -39,7 +40,7 @@ class ToSwaggerParamsSpec extends Spec {
           notes = intQueryParam.notes,
           paramType = ParamType.Query,
           defaultValue = None,
-          allowableValues = AllowableValues.AnyValue,
+          allowableValues = AllowableValues.AllowableRangeValues(-3 to 3),
           required = false),
         Parameter(
           name = "headerString",
@@ -48,7 +49,7 @@ class ToSwaggerParamsSpec extends Spec {
           notes = stringHeaderParam.param.notes,
           paramType = ParamType.Header,
           defaultValue = None,
-          allowableValues = AllowableValues.AnyValue,
+          allowableValues = AllowableValues.AllowableValuesList(List("foo", "bar")),
           required = true),
         Parameter(
           name = "queryLong",
