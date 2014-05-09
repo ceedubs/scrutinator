@@ -14,7 +14,7 @@ object Dependencies {
 
   object Tests {
     val specs2 = "org.specs2" %% "specs2" % "2.3.11"
-    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.10.1"
+    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.11.3"
   }
 
   val commonDependencies = Seq(
