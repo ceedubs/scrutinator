@@ -225,7 +225,7 @@ class JsonBodyReaderSpec extends Spec {
               ("foo" ->> ModelField(Model(
                 ("boolean" ->> booleanField.check(ForcedError, "boolean must be true")(Equal[Boolean].equal(_, true))) ::
                 ("stringWithDefault" ->> stringWithDefaultField.copy(param = stringWithDefaultField.param.check(ForcedError, "stringWithDefault must be 'bar'")(Equal[String].equal(_, "bar")))) :: HNil))) ::
-              ("requiredBoolean" ->> requiredBooleanField.copy(param = requiredBooleanField.param.check(ForcedError, "requiredBoolean must be false")(Equal[Boolean].equal(_, false)))) :: HNil)))
+              ("requiredBoolean" ->> requiredBooleanField.copy(param = requiredBooleanField.param.copy(allowedValues = AllowedValues.anyOf(false)))) :: HNil)))
             ) :: HNil
 
           val body =
@@ -254,7 +254,9 @@ class JsonBodyReaderSpec extends Spec {
               ValidationFail(ForcedError, Some("stringWithDefault must be 'bar'")),
               FieldC("stringWithDefault", stringWithDefaultField.param.prettyName) :: fooHistory),
             ScopedValidationFail(
-              ValidationFail(ForcedError, Some("requiredBoolean must be false")),
+              ValidationFail(
+                ParamError.NotInPermittedSet,
+                Some(s"${requiredBooleanField.param.prettyName.getOrElse("requiredBoolean")} must be one of the allowed values")),
               FieldC("requiredBoolean", requiredBooleanField.param.prettyName) :: Nil)
           )) ==== results
         }

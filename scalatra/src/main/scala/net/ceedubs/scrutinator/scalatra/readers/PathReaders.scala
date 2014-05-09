@@ -19,17 +19,11 @@ trait PathReaders {
       val params = new org.scalatra.util.MultiMapHeadView[String, String] {
         val multiMap = multiParams.getOrElse(Map.empty)
       }
-      val pathParams = PathParams(params)
+      val readerWithValidations = ParamReader.andThenCheckField(reader)((nestedHistory, fieldC, a) =>
+        Field.runValidations(namedParam.param, fieldC, nestedHistory, a))
       val fieldC = FieldC(name = namedParam.name, prettyName = namedParam.param.prettyName) 
-      reader.reader((history, (fieldC, pathParams))).flatMap { maybeA =>
-        std.option.cata(maybeA)({ a =>
-          val errors = namedParam.param.validations.
-            map(_.apply(fieldC, a).
-            map(ScopedValidationFail(_, fieldC :: history))).
-            flatten
-          std.option.toFailure(std.list.toNel(errors))(Option(a))
-        }, Validation.success(None))
-      }
+      val nestedHistory = fieldC :: history
+      readerWithValidations.reader((nestedHistory, (fieldC, PathParams(params))))
     }
   }
 

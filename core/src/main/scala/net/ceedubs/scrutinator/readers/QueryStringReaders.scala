@@ -14,32 +14,24 @@ trait QueryStringReaders {
 
   implicit def queryStringNamedParamReader[A](implicit reader: FieldReader[ValidatedOption, QueryStringParams, A]): ParamReader[ValidatedOption, (NamedParam[QueryParam[Field[A]]], Request), A] = {
     ParamReader.paramReader[ValidatedOption, (NamedParam[QueryParam[Field[A]]], Request), A] { case (history, (namedParam, request)) =>
+      val readerWithValidations = ParamReader.andThenCheckField(reader)((nestedHistory, fieldC, a) =>
+        Field.runValidations(namedParam.param, fieldC, nestedHistory, a))
       val fieldC = FieldC(name = namedParam.name, prettyName = namedParam.param.prettyName)
-      val queryParams = QueryStringParams(request.multiParameters)
-      reader.reader((history, (fieldC, queryParams))).flatMap { maybeA =>
-        std.option.cata(maybeA)({ a =>
-          val errors = namedParam.param.validations.
-            map(_.apply(fieldC, a)
-            .map(ScopedValidationFail(_, fieldC :: history))).
-            flatten
-          std.option.toFailure(std.list.toNel(errors))(Option(a))
-        }, Validation.success(None))
-      }
+      val nestedHistory = fieldC :: history
+      readerWithValidations.reader((nestedHistory, (fieldC, QueryStringParams(request.multiParameters))))
     }
   }
 
   implicit def queryStringFieldReader[A](implicit elReader: QueryStringElReader[A]): FieldReader[ValidatedOption, QueryStringParams, A] =
     FieldReader.reader[ValidatedOption, QueryStringParams, A] { (history, fieldC, queryParams) =>
-      val nestedHistory = fieldC :: history
       val valueMaybe = queryParams.get(fieldC.name).
         flatMap(_.headOption.filterNot(_.isEmpty))
       Traverse[Option].traverse(valueMaybe)(s =>
-        elReader.r.reader((nestedHistory, s)))
+        elReader.r.reader((history, s)))
     }
 
   implicit def cbfQueryStringFieldReader[C[_], A](implicit elReader: QueryStringElReader[A], cbf: CanBuildFrom[Nothing, A, C[A]]): FieldReader[ValidatedOption, QueryStringParams, C[A]] =
-    FieldReader.reader[ValidatedOption, QueryStringParams, C[A]] { (history, fieldC, queryParams) =>
-      val fieldHistory = fieldC :: history
+    FieldReader.reader[ValidatedOption, QueryStringParams, C[A]] { (fieldHistory, fieldC, queryParams) =>
       Traverse[Option].traverseU(queryParams.get(fieldC.name))(seq =>
         (Traverse[List].traverseU(seq.zipWithIndex.toList){ case (s, index) =>
           val indexHistory = IndexC(index) :: fieldHistory

@@ -11,18 +11,11 @@ trait HeaderReaders {
 
   implicit def headerNamedParamReader[A](implicit reader: FieldReader[ValidatedOption, HeaderParams, A]): ParamReader[ValidatedOption, (NamedParam[HeaderParam[Field[A]]], Request), A] = {
     ParamReader.paramReader[ValidatedOption, (NamedParam[HeaderParam[Field[A]]], Request), A] { case (history, (namedParam, request)) =>
+      val readerWithValidations = ParamReader.andThenCheckField(reader)((nestedHistory, fieldC, a) =>
+        Field.runValidations(namedParam.param, fieldC, nestedHistory, a))
       val fieldC = FieldC(name = namedParam.name, prettyName = namedParam.param.prettyName)
-      val headers = HeaderParams(request.headers)
       val nestedHistory = fieldC :: history
-      reader.reader((history, (fieldC, headers))).flatMap { maybeA =>
-        std.option.cata(maybeA)({ a =>
-          val errors = namedParam.param.validations.
-            map(_.apply(fieldC, a)
-            .map(ScopedValidationFail(_, nestedHistory))).
-            flatten
-          std.option.toFailure(std.list.toNel(errors))(Option(a))
-        }, Validation.success(None))
-      }
+      readerWithValidations.reader((nestedHistory, (fieldC, HeaderParams(request.headers))))
     }
   }
 

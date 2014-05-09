@@ -5,6 +5,7 @@ import shapeless._
 import shapeless.syntax.singleton._
 import shapeless.test.illTyped
 import scalaz._
+import scalaz.std.string._
 import scalaz.syntax.std.option._
 import javax.servlet.http.HttpServletRequest
 import scala.collection.JavaConverters._
@@ -48,7 +49,8 @@ class RequestBindingSpec extends Spec with Mockito {
         mockRequest.getHeader("second") returns second
         val fields =
           ("first" ->> QueryParam(Field[String]().check(ForcedError, "first failed!")(_ => false))) ::
-          ("second" ->> HeaderParam(Field[String]().check(ForcedError, "second failed!")(_ => false))) ::
+          ("second" ->> HeaderParam(Field[String](
+            allowedValues = AllowedValues.anyOf("foo", "bar")))) ::
           HNil
 
         val results = RequestBinding.fieldBinder(fields).run(mockRequest)
@@ -61,7 +63,7 @@ class RequestBindingSpec extends Spec with Mockito {
             ValidationFail(ForcedError, Some("first failed!")),
             FieldC("first", None) :: Nil),
           ScopedValidationFail(
-            ValidationFail(ForcedError, Some("second failed!")),
+            ValidationFail(ParamError.NotInPermittedSet, Some("second must be one of the allowed values")),
             FieldC("second", None) :: Nil)))
       }
     }
