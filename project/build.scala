@@ -3,7 +3,7 @@ import Keys._
 
 object Dependencies {
   import BuildSettings._
-  val scalatraVersion = "2.3.0.RC1"
+  val scalatraVersion = "2.3.0"
 
   object Scalatra {
     val core = "org.scalatra" %% "scalatra" % scalatraVersion
