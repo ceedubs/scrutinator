@@ -89,8 +89,10 @@ object BuildSettings {
     resolvers ++= Seq(
       Resolver.sonatypeRepo("snapshots"),
       Resolver.sonatypeRepo("releases")),
+    libraryDependencies ++= Dependencies.commonDependencies,
     publishArtifact in Test := false,
-    libraryDependencies ++= Dependencies.commonDependencies)
+    publishTo := buildPublishTo) ++
+    pomSettings
 }
 
 object build extends Build {
