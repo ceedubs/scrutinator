@@ -15,6 +15,8 @@ trait ParamReader[M[+_], I, O] {
     case (c, i2) => (c, f(i2))
   })
 
+  def map[O2](f: O => O2)(implicit F: Functor[M]): ParamReader[M, I, O2] = transform(_.map(f))
+
   def mapK[N[+_], O2](f: M[O] => N[O2]): ParamReader[N, I, O2] = transform(_.mapK(f))
 
 }
