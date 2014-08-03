@@ -27,7 +27,7 @@ object Dependencies {
 object BuildSettings {
   import Dependencies._
 
-  val buildVersion = "0.1.0-SNAPSHOT"
+  val buildVersion = "0.1.0"
   val buildScalaVersion = "2.10.4"
 
   val buildScalacOptions = Seq(
