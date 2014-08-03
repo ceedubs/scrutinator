@@ -77,7 +77,7 @@ object BuildSettings {
 
   lazy val defaultSettings = Defaults.defaultSettings ++ Seq(
     organization := "net.ceedubs",
-    version := "0.1.0-SNAPSHOT",
+    version := buildVersion,
     description := "Request binding in Scalatra with help from Shapeless",
     homepage := Some(url("https://github.com/ceedubs/scrutinator")),
     scalaVersion := buildScalaVersion,
