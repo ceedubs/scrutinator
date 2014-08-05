@@ -17,26 +17,30 @@ class RequestBindingSpec extends Spec with Mockito {
   import ValueSource._
 
   "Request binding" should {
-    "successfully bind valid params" ! prop { (first: Option[String], second: Option[String]) =>
+    "successfully bind valid params" ! prop { (first: Option[String], second: Option[String], third: Option[String]) =>
       val mockRequest = mock[HttpServletRequest]
       mockRequest.getParameterMap returns Map(
-        "first" -> first.map(s => Array(s)).getOrElse(Array())
+        "first" -> first.map(s => Array(s)).getOrElse(Array()),
+        "third" -> third.map(s => Array(s)).getOrElse(Array())
       ).asJava
       mockRequest.getHeader("second") returns second.orNull
       val fields =
         ("first" ->> QueryParam(Field[String]())) ::
         ('second ->> HeaderParam(Field[String]().check(InvalidFormat, "oops!")(_ => true))) ::
+        ("third" ->> QueryParam(Field[String](
+          allowedValues = AllowedValues.anyOf("foo", third.getOrElse("blah"))))) ::
         HNil
 
       val results = RequestBinding.fieldBinder(fields).run(mockRequest)
 
-      typed[Errors \/ (Option[String], Option[String])](results.map(params =>
-        (params.get("first"), params.get('second))))
+      typed[Errors \/ (Option[String], Option[String], Option[String])](results.map(params =>
+        (params.get("first"), params.get('second), params.get("third"))))
 
       results must beLike {
         case \/-(params) =>
           first.flatMap(blankOption) ==== params.get("first")
           second.flatMap(blankOption) ==== params.get('second)
+          third.flatMap(blankOption) ==== params.get("third")
       }
     }
 

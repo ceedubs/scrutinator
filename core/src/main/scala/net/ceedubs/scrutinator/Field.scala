@@ -56,8 +56,11 @@ object Field {
     val allowableValueDisjunction = field.allowedValues match {
       case _: AnyValue[_] => \/.right(())
       case AllowedValueList(allowed, equal) =>
-        if (Foldable[NonEmptyList].element(allowed, a)(equal)) \/.right(())
-        fail(ValidationFail(ParamError.NotInPermittedSet, Some(s"${fieldC.displayName} must be one of the allowed values")))
+        if (Foldable[NonEmptyList].element(allowed, a)(equal)) {
+          \/.right(())
+        } else {
+          fail(ValidationFail(ParamError.NotInPermittedSet, Some(s"${fieldC.displayName} must be one of the allowed values")))
+        }
       case AllowedRange(min, max, order) =>
         if (order.greaterThanOrEqual(a, min) && order.lessThanOrEqual(a, max)) \/.right(())
         else fail(ValidationFail(ParamError.OutsideRange, Some(s"${fieldC.displayName} must be within the allowed range")))
