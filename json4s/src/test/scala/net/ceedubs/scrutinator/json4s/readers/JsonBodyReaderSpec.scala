@@ -40,15 +40,14 @@ class JsonBodyReaderSpec extends Spec {
         ("requiredBoolean" -> requiredBoolean)
       val request = mockRequest(jsonBody = Some(compact(render(body))))
 
-      val results = RequestBinding.fieldBinder(fields).run(request).map { params =>
-        val body = params.get("body")
-        (body.get("string"), body.get("boolean"), body.get("stringWithDefault"), body.get("requiredBoolean"))
-      }
-      \/.right[Errors, (Option[String], Option[Boolean], String, Boolean)]((
+      val results = RequestBinding.fieldBinder(fields).run(request).map(_.get("body").map(body =>
+        (body.get("string"), body.get("boolean"), body.get("stringWithDefault"), body.get("requiredBoolean"))))
+
+      \/.right[Errors, Option[(Option[String], Option[Boolean], String, Boolean)]](Some((
         string,
         boolean,
         stringWithDefault.getOrElse(stringWithDefaultField.default),
-        requiredBoolean)) ==== results
+        requiredBoolean))) ==== results
     }
 
     "successfully bind numbers" ! prop { (
@@ -64,7 +63,7 @@ class JsonBodyReaderSpec extends Spec {
           ("long" ->> Field[Long]()) ::
           ("double" ->> Field[Double]()) ::
           ("float" ->> Field[Float]()) ::
-          ("short" ->> Field[Short]()) :: HNil)))
+          ("short" ->> Field[Short]()) :: HNil)).required())
         ) :: HNil
 
       val body =
@@ -86,7 +85,7 @@ class JsonBodyReaderSpec extends Spec {
       val fields =
         ("body" ->> JsonParam(ModelField(Model(
           ("stringSet" ->> Field[Set[String]]()) ::
-          ("doubleList" ->> Field[List[Double]]()) :: HNil)))
+          ("doubleList" ->> Field[List[Double]]()) :: HNil)).required())
         ) :: HNil
       val body =
         ("stringSet" -> stringSet) ~
@@ -112,7 +111,7 @@ class JsonBodyReaderSpec extends Spec {
           ("double" ->> doubleField) ::
           ("intSet" ->> intSetField) ::
           ("booleanList" ->> booleanListField) ::
-          HNil)))
+          HNil)).required())
         ) :: HNil
 
       val body =
@@ -158,7 +157,7 @@ class JsonBodyReaderSpec extends Spec {
           ("foo" ->> ModelField(Model(
             ("boolean" ->> booleanField) ::
             ("stringWithDefault" ->> stringWithDefaultField) :: HNil))) ::
-          ("requiredBoolean" ->> requiredBooleanField) :: HNil)))
+          ("requiredBoolean" ->> requiredBooleanField) :: HNil)).required())
         ) :: HNil
 
       val body =
@@ -192,7 +191,7 @@ class JsonBodyReaderSpec extends Spec {
           ("foos" ->> CollectionField[List].ofModel(Model(
             ("boolean" ->> booleanField) ::
             ("stringWithDefault" ->> stringWithDefaultField) :: HNil))) ::
-          ("requiredBoolean" ->> requiredBooleanField) :: HNil)))
+          ("requiredBoolean" ->> requiredBooleanField) :: HNil)).required())
         ) :: HNil
 
       val body =
@@ -225,7 +224,7 @@ class JsonBodyReaderSpec extends Spec {
               ("foo" ->> ModelField(Model(
                 ("boolean" ->> booleanField.check(ForcedError, "boolean must be true")(Equal[Boolean].equal(_, true))) ::
                 ("stringWithDefault" ->> stringWithDefaultField.copy(param = stringWithDefaultField.param.check(ForcedError, "stringWithDefault must be 'bar'")(Equal[String].equal(_, "bar")))) :: HNil))) ::
-              ("requiredBoolean" ->> requiredBooleanField.copy(param = requiredBooleanField.param.copy(allowedValues = AllowedValues.anyOf(false)))) :: HNil)))
+              ("requiredBoolean" ->> requiredBooleanField.copy(param = requiredBooleanField.param.copy(allowedValues = AllowedValues.anyOf(false)))) :: HNil)).required())
             ) :: HNil
 
           val body =

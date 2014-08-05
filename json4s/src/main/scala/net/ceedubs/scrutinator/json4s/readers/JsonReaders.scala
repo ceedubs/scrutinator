@@ -5,6 +5,7 @@ package readers
 import net.ceedubs.scrutinator.readers._
 import scalaz._
 import scalaz.std.list._
+import scalaz.std.option._
 import shapeless._
 import shapeless.record._
 import org.json4s._
@@ -116,11 +117,15 @@ trait JsonReaders {
     }
   }
 
-  implicit def jsonRequestBodyReader[M, L <: HList](implicit asModel: AsModel.Aux[M, L], binder: FieldBinder[L, JValue]): ParamReader[Validated, (NamedParam[JsonParam[ModelField[M]]], Request), binder.R] =
-    ParamReader.paramReader[Validated, (NamedParam[JsonParam[ModelField[M]]], Request), binder.R] { case (history, (namedParam, request)) =>
+  implicit def jsonRequestBodyReader[M, L <: HList](implicit asModel: AsModel.Aux[M, L], binder: FieldBinder[L, JValue]): ParamReader[ValidatedOption, (NamedParam[JsonParam[ModelField[M]]], Request), binder.R] =
+    ParamReader.paramReader[ValidatedOption, (NamedParam[JsonParam[ModelField[M]]], Request), binder.R] { case (history, (namedParam, request)) =>
       Validation.fromTryCatch(JsonMethods.parse(request.body)).
       leftMap(_ => invalidFormatNel(history, "JSON body")).
-      flatMap(jsonBody => binder(asModel(namedParam.param.model).fields).run((history, jsonBody)))
+      map{
+        case JNothing | JNull => None
+        case x => Some(x)
+      }.
+      flatMap(o => Traverse[Option].traverse(o)(jsonBody => binder(asModel(namedParam.param.model).fields).run((history, jsonBody))))
     }
 }
 
